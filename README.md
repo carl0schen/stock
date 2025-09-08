@@ -6,4 +6,4 @@
 
 ### 資料彙整
 
-使用Open AI的ChatGPT輸出綜合摘要和解讀籌碼方向。
+使用Open AI的ChatGPT產生綜合摘要和解讀籌碼方向。

@@ -1,0 +1,125 @@
+name: Generate Sitemap
+
+on:
+  # 當推送到 main 分支時觸發
+  push:
+    branches: [ main ]
+    paths:
+      - '20*/index.html'  # 只有台股資料更新才觸發
+      - '20*/**'          # 或是整個日期資料夾有變動
+  
+  # 每天早上自動執行一次
+  schedule:
+    - cron: '0 1 * * *'  # UTC 1:00 AM (台灣時間 9:00 AM)
+  
+  # 允許手動觸發
+  workflow_dispatch:
+
+jobs:
+  generate-sitemap:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 獲取完整歷史，用於準確的修改時間
+        
+    - name: Generate sitemap
+      run: |
+        echo "開始生成 sitemap..."
+        echo '<?xml version="1.0" encoding="UTF-8"?>' > sitemap.xml
+        echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' >> sitemap.xml
+        
+        # 處理首頁（如果存在）
+        if [ -f "index.html" ]; then
+          last_mod=$(date -r index.html +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
+          echo "  <url>" >> sitemap.xml
+          echo "    <loc>https://stock.may.tw/</loc>" >> sitemap.xml
+          echo "    <lastmod>$last_mod</lastmod>" >> sitemap.xml
+          echo "    <changefreq>daily</changefreq>" >> sitemap.xml
+          echo "    <priority>1.0</priority>" >> sitemap.xml
+          echo "  </url>" >> sitemap.xml
+          echo "已加入首頁"
+        fi
+        
+        # 收集所有日期資料夾
+        folders=()
+        for dir in */; do
+          # 檢查資料夾名稱是否符合 YYYYMMDD 格式
+          if [[ ${dir%/} =~ ^[0-9]{8}$ ]] && [ -f "${dir}index.html" ]; then
+            folders+=("${dir%/}")
+          fi
+        done
+        
+        # 按日期排序（最新的在前）
+        IFS=$'\n' sorted_folders=($(sort -r <<<"${folders[*]}"))
+        unset IFS
+        
+        # 為每個資料夾生成 sitemap 條目
+        count=0
+        for folder in "${sorted_folders[@]}"; do
+          if [ -f "${folder}/index.html" ]; then
+            # 獲取檔案修改時間
+            last_mod=$(date -r "${folder}/index.html" +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
+            
+            # 計算天數差異來設定優先級和更新頻率
+            folder_date=$(date -d "${folder:0:4}-${folder:4:2}-${folder:6:2}" +%s 2>/dev/null || date +%s)
+            current_date=$(date +%s)
+            days_diff=$(( (current_date - folder_date) / 86400 ))
+            
+            # 根據資料新舊設定參數
+            if [ $days_diff -le 1 ]; then
+              priority="1.0"
+              changefreq="hourly"
+            elif [ $days_diff -le 7 ]; then
+              priority="0.9"
+              changefreq="daily"
+            elif [ $days_diff -le 30 ]; then
+              priority="0.7"
+              changefreq="weekly"
+            else
+              priority="0.5"
+              changefreq="monthly"
+            fi
+            
+            echo "  <url>" >> sitemap.xml
+            echo "    <loc>https://stock.may.tw/$folder/</loc>" >> sitemap.xml
+            echo "    <lastmod>$last_mod</lastmod>" >> sitemap.xml
+            echo "    <changefreq>$changefreq</changefreq>" >> sitemap.xml
+            echo "    <priority>$priority</priority>" >> sitemap.xml
+            echo "  </url>" >> sitemap.xml
+            
+            count=$((count + 1))
+            echo "已處理: $folder ($days_diff 天前)"
+          fi
+        done
+        
+        echo '</urlset>' >> sitemap.xml
+        echo "Sitemap 生成完成，包含 $count 個頁面"
+        
+    - name: Commit and push sitemap
+      run: |
+        # 設定 Git 使用者資訊
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        # 檢查是否有變更
+        if git diff --quiet sitemap.xml; then
+          echo "Sitemap 沒有變更，跳過提交"
+        else
+          git add sitemap.xml
+          git commit -m "🤖 自動更新 sitemap - $(date +'%Y-%m-%d %H:%M:%S')"
+          git push
+          echo "Sitemap 已更新並推送"
+        fi
+        
+    - name: Display sitemap info
+      run: |
+        echo "=== Sitemap 資訊 ==="
+        echo "檔案大小: $(wc -c < sitemap.xml) bytes"
+        echo "包含頁面數: $(grep -c '<loc>' sitemap.xml)"
+        echo "最近5筆資料:"
+        grep '<loc>' sitemap.xml | head -5 | sed 's/.*<loc>\(.*\)<\/loc>.*/  \1/'
+        echo ""
+        echo "Sitemap 位置: https://stock.may.tw/sitemap.xml"

@@ -8,6 +8,7 @@
 
 使用Open AI的ChatGPT建立綜合摘要和解讀籌碼方向。
 
-### 文章網址
+### 資料網址
 
-`https://stock.may.tw/西元日期/`，例如：`https://stock.may.tw/20250905/`。
+`https://stock.may.tw/西元日期/`，例如：`https://stock.may.tw/20250905/`。  
+資料從2025年9月5日開始上傳。

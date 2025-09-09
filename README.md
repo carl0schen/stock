@@ -16,3 +16,7 @@
 
 `https://stock.may.tw/西元日期/`，例如：`https://stock.may.tw/20250905/`。  
 資料從2025年9月5日開始上傳。
+
+### 聯絡信箱
+
+如果資料錯誤，歡迎來信告知：`stock.may.tw@ghost.tw`

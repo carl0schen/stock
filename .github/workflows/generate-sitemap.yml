@@ -43,6 +43,15 @@ jobs:
           echo "已加入首頁"
         fi
         
+        # 加入 RSS feed
+        echo "  <url>" >> sitemap.xml
+        echo "    <loc>https://stock.may.tw/rss.xml</loc>" >> sitemap.xml
+        echo "    <lastmod>$(date +%Y-%m-%d)</lastmod>" >> sitemap.xml
+        echo "    <changefreq>daily</changefreq>" >> sitemap.xml
+        echo "    <priority>0.8</priority>" >> sitemap.xml
+        echo "  </url>" >> sitemap.xml
+        echo "已加入 RSS feed"
+        
         # 收集所有日期資料夾
         folders=()
         for dir in */; do

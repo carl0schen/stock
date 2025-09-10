@@ -1,0 +1,131 @@
+# .github/workflows/generate-rss.yml
+name: Generate RSS Feed
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '202[0-9][0-9][0-9][0-9][0-9]/**'  # 監控日期資料夾的變更
+  workflow_dispatch:  # 允許手動觸發
+
+jobs:
+  generate-rss:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # 獲取完整歷史以便排序
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Generate RSS Feed
+      run: |
+        cat > generate-rss.js << 'EOF'
+        const fs = require('fs');
+        const path = require('path');
+
+        // RSS 模板
+        const rssHeader = `<?xml version="1.0" encoding="UTF-8"?>
+        <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+          <channel>
+            <title>台股盤後 - 法人買賣超整理</title>
+            <link>https://stock.may.tw</link>
+            <description>利用AI彙整台股盤後資訊，快速掃描法人當日籌碼。</description>
+            <language>zh-TW</language>
+            <atom:link href="https://stock.may.tw/rss.xml" rel="self" type="application/rss+xml"/>
+            <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`;
+
+        const rssFooter = `  </channel>
+        </rss>`;
+
+        // 獲取所有日期資料夾
+        const getAllDateFolders = () => {
+          const folders = fs.readdirSync('.')
+            .filter(item => {
+              const stat = fs.statSync(item);
+              return stat.isDirectory() && /^\d{8}$/.test(item);
+            })
+            .sort((a, b) => b.localeCompare(a)); // 降序排列，最新的在前
+          
+          return folders;
+        };
+
+        // 格式化日期顯示
+        const formatDate = (dateStr) => {
+          const year = dateStr.substring(0, 4);
+          const month = dateStr.substring(4, 6);
+          const day = dateStr.substring(6, 8);
+          return `${year}年${month}月${day}日`;
+        };
+
+        // 轉換為 RSS 日期格式
+        const toRSSDate = (dateStr) => {
+          const year = dateStr.substring(0, 4);
+          const month = dateStr.substring(4, 6);
+          const day = dateStr.substring(6, 8);
+          const date = new Date(year, month - 1, day, 18, 0, 0); // 設定為下午6點
+          return date.toUTCString();
+        };
+
+        // 生成 RSS 項目
+        const generateRSSItems = (folders) => {
+          return folders.slice(0, 10).map(folder => { // 只取最新 10 筆
+            const title = `${formatDate(folder)} - 法人買賣超整理`;
+            const link = `https://stock.may.tw/${folder}/`;
+            const pubDate = toRSSDate(folder);
+            const guid = `https://stock.may.tw/${folder}/`;
+            
+            return `    <item>
+              <title>${title}</title>
+              <link>${link}</link>
+              <description>法人買賣超整理 - ${formatDate(folder)}</description>
+              <pubDate>${pubDate}</pubDate>
+              <guid isPermaLink="true">${guid}</guid>
+            </item>`;
+          }).join('\n');
+        };
+
+        // 主程序
+        const main = () => {
+          try {
+            const folders = getAllDateFolders();
+            console.log(`找到 ${folders.length} 個日期資料夾`);
+            
+            if (folders.length === 0) {
+              console.log('沒有找到任何日期資料夾');
+              return;
+            }
+
+            const rssItems = generateRSSItems(folders);
+            const rssContent = `${rssHeader}\n${rssItems}\n${rssFooter}`;
+            
+            fs.writeFileSync('rss.xml', rssContent, 'utf8');
+            console.log('RSS feed 生成完成');
+            console.log(`包含 ${Math.min(folders.length, 10)} 個項目`);
+          } catch (error) {
+            console.error('生成 RSS 時發生錯誤:', error);
+            process.exit(1);
+          }
+        };
+
+        main();
+        EOF
+
+        node generate-rss.js
+
+    - name: Commit and push RSS file
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add rss.xml
+        if git diff --staged --quiet; then
+          echo "RSS 檔案沒有變更"
+        else
+          git commit -m "Auto-update RSS feed [skip ci]"
+          git push
+        fi

@@ -19,5 +19,5 @@
 
 ### 聯絡信箱
 
-如果資料有誤，歡迎來信告知：`stock.may.tw@ghost.tw`
+如果資料有誤，歡迎來信告知：`stock.may.tw@ghost.tw`  
 RSS訂閱：`https://stock.may.tw/rss.xml`

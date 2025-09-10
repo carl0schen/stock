@@ -75,7 +75,7 @@ jobs:
         // 生成 RSS 項目
         const generateRSSItems = (folders) => {
           return folders.slice(0, 10).map(folder => { // 只取最新 10 筆
-            const title = `${formatDate(folder)} - 法人買賣超整理`;
+            const title = `${formatDate(folder)} 法人買賣超整理`;
             const link = `https://stock.may.tw/${folder}/`;
             const pubDate = toRSSDate(folder);
             const guid = `https://stock.may.tw/${folder}/`;
@@ -83,7 +83,7 @@ jobs:
             return `    <item>
               <title>${title}</title>
               <link>${link}</link>
-              <description>法人買賣超整理 - ${formatDate(folder)}</description>
+              <description>本文整理了${formatDate(folder)}台股盤後三大法人的交易動向。</description>
               <pubDate>${pubDate}</pubDate>
               <guid isPermaLink="true">${guid}</guid>
             </item>`;

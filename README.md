@@ -22,4 +22,5 @@
 
 ### 文章訂閱
 
-RSS訂閱：`https://stock.may.tw/rss.xml`
+RSS訂閱：`https://stock.may.tw/rss.xml`  
+電子郵件訂閱：<https://stock.may.tw/subscription/>

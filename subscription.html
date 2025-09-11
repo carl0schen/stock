@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>訂閱新文章</title>
+    <style>
+        html {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 1em;
+            font-size: 1.125em;
+            line-height: 1.75;
+            width: 100%;
+        }
+        *, *::before, *::after {
+            box-sizing: inherit;
+        }
+        body {
+            max-width: 70ch;
+            margin: auto;
+            padding: 2em 1em;
+        }
+        p, li, h1, h2, h3, h4, h5, h6, code {
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        @media (max-width: 600px) {
+            body {
+                padding: 1em;
+                font-size: 1em;
+            }
+        }
+
+        /* 表單樣式 */
+        .subscribe-form {
+            margin: 2em 0;
+            padding: 1.5em;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            background: #f6f8fa;
+        }
+
+        .subscribe-form h3 {
+            margin: 0 0 1em 0;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 0.5em;
+            margin-bottom: 0.75em;
+        }
+
+        .email-input {
+            flex: 1;
+            padding: 0.5em 0.75em;
+            border: 1px solid #d0d7de;
+            border-radius: 6px;
+            font-size: 0.9em;
+            background: white;
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: #0969da;
+            box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+        }
+
+        .submit-btn {
+            background: #0969da;
+            color: white;
+            border: none;
+            padding: 0.5em 1em;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .submit-btn:hover {
+            background: #0550ae;
+        }
+
+        .privacy-text {
+            font-size: 0.8em;
+            color: #656d76;
+            margin: 0;
+        }
+
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+            }
+            
+            .submit-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="subscribe-form">
+        <h3>📧 透過電子郵件接收新文章</h3>
+        
+        <form action="https://api.follow.it/subscription-form/NXRNTnZpWWdheGk1WjA3czhEclBRYjgzL2FPbTBoSmdEZEp3VkRaQXZJbkNHdTRWQmpSU0tOSUdWQk0yenZBd1BrMkJ0c0J2dmpPVnFGaFY5ZTgwMGVjN3lXRVJpQ0M4RU1IOUNZdSs0bEtTZG9VaVYrVUV0VFUxakNtcjdxdjh8TlhzZXFVQmFyc25sMzROSTU4dThUdDRsTUNBWkNkUThZci9NbzhqS2htUT0=/8" method="post">
+            
+            <div class="form-row">
+                <input type="email" name="email" class="email-input" placeholder="輸入您的電子信箱" required>
+                <button type="submit" class="submit-btn">訂閱</button>
+            </div>
+            
+            <p class="privacy-text">我們重視您的隱私，不會分享您的資料</p>
+        </form>
+    </div>
+</body>
+</html>

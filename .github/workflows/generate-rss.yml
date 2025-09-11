@@ -75,7 +75,7 @@ jobs:
           const year = dateStr.substring(0, 4);
           const month = dateStr.substring(4, 6);
           const day = dateStr.substring(6, 8);
-          const date = new Date(year, month - 1, day, 17, 0, 0); // 設定為下午5點
+          const date = new Date(year, month - 1, day, 16, 30, 0); // 設定為下午4點半
           return date.toUTCString();
         };
 

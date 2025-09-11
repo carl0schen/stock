@@ -23,4 +23,4 @@
 ### 文章訂閱
 
 RSS訂閱：`https://stock.may.tw/rss.xml`  
-電子郵件訂閱：<https://stock.may.tw/subscription/>
+電子郵件訂閱：<https://stock.may.tw/subscription/>，或是使用[Feedrabbit](https://feedrabbit.com/)來訂閱。

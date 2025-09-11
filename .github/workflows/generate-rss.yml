@@ -13,10 +13,17 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Wait for other workflows
+      if: github.event_name == 'push'
+      run: |
+        echo "等待其他 workflow 完成..."
+        sleep 30  # 等待 30 秒讓其他 workflow 先執行
+    
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 0  # 獲取完整歷史以便排序
+        ref: main  # 確保拉取最新的 main 分支
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -118,14 +125,57 @@ jobs:
 
         node generate-rss.js
 
-    - name: Commit and push RSS file
+    - name: Commit and push RSS file with retry
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add rss.xml
+        
         if git diff --staged --quiet; then
           echo "RSS 檔案沒有變更"
-        else
-          git commit -m "Auto-update RSS feed [skip ci]"
-          git push
+          exit 0
         fi
+        
+        # 提交變更
+        git commit -m "Auto-update RSS feed [skip ci]"
+        
+        # 推送時加入重試機制
+        max_attempts=3
+        attempt=1
+        
+        while [ $attempt -le $max_attempts ]; do
+          echo "嘗試推送 RSS 更新 (第 $attempt 次)..."
+          
+          if git push; then
+            echo "✅ RSS 推送成功!"
+            exit 0
+          else
+            echo "❌ 推送失敗，準備重試..."
+            
+            if [ $attempt -eq $max_attempts ]; then
+              echo "❌ 已達最大重試次數 ($max_attempts)，放棄推送"
+              exit 1
+            fi
+            
+            echo "🔄 拉取遠端變更並重新嘗試..."
+            # 先拉取最新變更
+            if git pull --rebase origin main; then
+              echo "✅ 成功同步遠端變更"
+            else
+              echo "⚠️ 同步時出現問題，嘗試強制同步..."
+              git rebase --abort 2>/dev/null || true
+              git fetch origin main
+              git reset --hard origin/main
+              git add rss.xml
+              git commit -m "Auto-update RSS feed [skip ci]"
+            fi
+            
+            # 等待隨機時間避免衝突
+            sleep_time=$((5 + RANDOM % 5))  # 5-9秒隨機等待
+            echo "⏳ 等待 $sleep_time 秒後重試..."
+            sleep $sleep_time
+          fi
+          
+          attempt=$((attempt + 1))
+        done
+        

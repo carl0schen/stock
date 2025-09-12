@@ -137,7 +137,7 @@ jobs:
         fi
         
         # 提交變更
-        git commit -m "🤖 Auto-update RSS feed"  # 用 emoji 標示自動更新
+        git commit -m "🤖 Auto-update RSS feed"
         
         # 推送時加入重試機制
         max_attempts=3

@@ -32,6 +32,14 @@
             margin-bottom: 20px;
         }
 
+        /* 新增的提示文字樣式 */
+        .info-text {
+            font-size: 14px;
+            color: #666;
+            margin-top: -10px; /* 向上微調與標題的距離 */
+            margin-bottom: 10px;
+        }
+
         .date-input {
             padding: 10px;
             font-size: 16px;
@@ -60,6 +68,7 @@
 <body>
     <div class="search-container">
         <h2>輸入日期前往文章</h2>
+        <p class="info-text">目前資料從2025年9月5日開始。</p>
         <input type="text" id="dateInput" placeholder="例如：20250912" class="date-input">
         <button onclick="goToDatePage()" class="date-button">前往</button>
     </div>
@@ -74,12 +83,8 @@
       }
     }
 
-    // 取得輸入框元素
     const dateInput = document.getElementById('dateInput');
-
-    // 新增鍵盤事件監聽器
     dateInput.addEventListener('keypress', function(event) {
-      // 檢查按下的鍵是否為 Enter (key code 13)
       if (event.key === 'Enter') {
         goToDatePage();
       }

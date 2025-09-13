@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /subscription/
 Disallow: *.md
 
 Sitemap: https://stock.may.tw/sitemap.xml

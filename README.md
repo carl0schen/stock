@@ -31,4 +31,4 @@ RSS訂閱：`https://stock.may.tw/rss.xml`
 
 來源：`https://tw.stock.yahoo.com/rss?q=台股盤後`  
 來源：`https://tw.stock.yahoo.com/rss?q=美股盤後`  
-網址：<https://stock.may.tw/news>
+網址：<https://stock.may.tw/news/>

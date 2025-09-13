@@ -1,7 +1,7 @@
 <div class="search-container">
     <h3>輸入日期前往文章</h3>
     <input type="text" id="dateInput" placeholder="例如：20250913" class="date-input">
-    <button onclick="goToDatePage()" class="date-button">前往</button>
+    <button id="searchButton" class="date-button">前往</button>
 </div>
 
 ### 關於本站
@@ -32,10 +32,14 @@ RSS訂閱：`https://stock.may.tw/rss.xml`
 電子郵件訂閱：使用[Feedrabbit](https://feedrabbit.com/)服務訂閱。
 
 <script>
-    // 在 Zero-MD 中，我們需要等待 DOM 元素載入完成
+    // 在 Zero-MD 中，需要等待 DOM 元素載入完成
     window.addEventListener('load', function() {
+        const dateInput = document.getElementById('dateInput');
+        const searchButton = document.getElementById('searchButton');
+
+        // 定義跳轉函式
         function goToDatePage() {
-            const date = document.getElementById('dateInput').value;
+            const date = dateInput.value;
             if (date && /^\d{8}$/.test(date)) {
                 window.location.href = `/${date}/`;
             } else {
@@ -43,12 +47,12 @@ RSS訂閱：`https://stock.may.tw/rss.xml`
             }
         }
 
-        // 將函式掛載到全域變數，以便 HTML 的 onclick 屬性可以呼叫
-        window.goToDatePage = goToDatePage;
+        // 檢查元素是否存在，然後再綁定事件
+        if (dateInput && searchButton) {
+            // 為按鈕綁定點擊事件
+            searchButton.addEventListener('click', goToDatePage);
 
-        // 取得輸入框元素並新增事件監聽器
-        const dateInput = document.getElementById('dateInput');
-        if (dateInput) { // 確保元素存在
+            // 為輸入框綁定鍵盤事件
             dateInput.addEventListener('keypress', function(event) {
                 if (event.key === 'Enter') {
                     goToDatePage();
@@ -66,7 +70,7 @@ RSS訂閱：`https://stock.may.tw/rss.xml`
         padding: 2em 1em;
         display: flex;
         flex-direction: column;
-        align-items: center;
+        align-items: left;
     }
     
     .search-container h3 {

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台股盤後新聞</title>
+    
+    <style>
+        /* 這裡的樣式會只影響這個頁面 */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .news-container {
+            max-width: 70ch; /* 讓內容寬度與網站風格一致 */
+            margin: auto; /* 置中 */
+            padding: 2em 1em; /* 內距 */
+        }
+        
+        .news-container h1 {
+            font-size: 2em;
+            text-align: center;
+        }
+        
+        /* 每一篇新聞的樣式 */
+        .news-item {
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 1.5em;
+            margin-bottom: 1.5em;
+        }
+        
+        .news-item:last-child {
+            border-bottom: none; /* 最後一則新聞不顯示底線 */
+        }
+
+        /* 標題樣式 */
+        .news-item h2 {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 0.5em;
+        }
+
+        /* 日期樣式 */
+        .news-date {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 0.5em;
+        }
+        
+        /* 內文樣式 */
+        .news-item p {
+            line-height: 1.6;
+            color: #444;
+        }
+
+        /* 連結樣式 */
+        .news-item a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        
+        .news-item a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="news-container">
+        <h1>台股盤後新聞</h1>
+        <div id="rss-output">
+            </div>
+    </div>
+
+    <script>
+    const rssFeedUrl = 'https://politepol.com/fd/fCHNDylpl1mO.xml';
+    const rss2jsonApi = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssFeedUrl)}`;
+
+    fetch(rss2jsonApi)
+        .then(response => response.json())
+        .then(data => {
+            const output = document.getElementById('rss-output');
+            
+            if (data.status === 'ok' && data.items.length > 0) {
+                data.items.forEach(item => {
+                    const newsItem = document.createElement('div');
+                    newsItem.classList.add('news-item');
+                    
+                    const title = document.createElement('h2');
+                    title.textContent = item.title;
+
+                    const date = document.createElement('p');
+                    date.classList.add('news-date');
+                    date.textContent = new Date(item.pubDate).toLocaleDateString('zh-TW', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    const content = document.createElement('p');
+                    // 移除 HTML 標籤
+                    const cleanDescription = item.description.replace(/<[^>]*>?/gm, ''); 
+                    content.textContent = cleanDescription;
+
+                    const link = document.createElement('a');
+                    link.href = item.link;
+                    link.textContent = '閱讀更多...';
+                    link.target = '_blank';
+                    
+                    newsItem.appendChild(title);
+                    newsItem.appendChild(date);
+                    newsItem.appendChild(content);
+                    newsItem.appendChild(link);
+                    
+                    output.appendChild(newsItem);
+                });
+            } else {
+                output.innerHTML = '<p>無法載入新聞資料，請稍後再試。</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching RSS feed:', error);
+            document.getElementById('rss-output').innerHTML = '<p>載入新聞時發生錯誤，請檢查網路連線或稍後再試。</p>';
+        });
+    </script>
+</body>
+</html>

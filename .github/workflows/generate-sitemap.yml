@@ -57,7 +57,7 @@ jobs:
         echo "    <loc>https://stock.may.tw/search</loc>" >> sitemap.xml
         echo "    <lastmod>$(date +%Y-%m-%d)</lastmod>" >> sitemap.xml
         echo "    <changefreq>monthly</changefreq>" >> sitemap.xml
-        echo "    <priority>0.6</priority>" >> sitemap.xml
+        echo "    <priority>0.7</priority>" >> sitemap.xml
         echo "  </url>" >> sitemap.xml
         echo "已加入搜尋頁面"
         

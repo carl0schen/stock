@@ -14,7 +14,8 @@
 
 ### 資料網址
 
-網址格式為`https://stock.may.tw/西元年月日/`，例如：`https://stock.may.tw/20250905/`。資料從2025年9月5日開始上傳。
+網址格式為`https://stock.may.tw/西元年月日/`，例如：`https://stock.may.tw/20250905/`。資料從2025年9月5日開始上傳。  
+或是到[搜尋頁面](https://stock.may.tw/search/)輸入日期前往文章。
 
 ### 聯絡信箱
 

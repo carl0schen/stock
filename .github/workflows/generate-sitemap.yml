@@ -52,6 +52,24 @@ jobs:
         echo "  </url>" >> sitemap.xml
         echo "已加入 RSS feed"
         
+        # 加入搜尋頁面
+        echo "  <url>" >> sitemap.xml
+        echo "    <loc>https://stock.may.tw/search</loc>" >> sitemap.xml
+        echo "    <lastmod>$(date +%Y-%m-%d)</lastmod>" >> sitemap.xml
+        echo "    <changefreq>monthly</changefreq>" >> sitemap.xml
+        echo "    <priority>0.6</priority>" >> sitemap.xml
+        echo "  </url>" >> sitemap.xml
+        echo "已加入搜尋頁面"
+        
+        # 加入新聞頁面
+        echo "  <url>" >> sitemap.xml
+        echo "    <loc>https://stock.may.tw/news/</loc>" >> sitemap.xml
+        echo "    <lastmod>$(date +%Y-%m-%d)</lastmod>" >> sitemap.xml
+        echo "    <changefreq>daily</changefreq>" >> sitemap.xml
+        echo "    <priority>0.7</priority>" >> sitemap.xml
+        echo "  </url>" >> sitemap.xml
+        echo "已加入新聞頁面"
+        
         # 收集所有日期資料夾
         folders=()
         for dir in */; do

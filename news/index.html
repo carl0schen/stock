@@ -15,7 +15,9 @@
         .news-container {
             max-width: 70ch;
             margin: auto;
-            padding: 2em 1em;
+            /* 這裡新增 padding-top 來避免導覽列遮住內容 */
+            padding: 2em 1em 2em; 
+            padding-top: 5em; /* 這裡的 padding-top 數值可以依據導覽列的高度調整 */
         }
 
         .news-section {
@@ -29,16 +31,18 @@
             padding-bottom: 0.5em;
         }
         
+        /* 導覽列樣式：改為 position: fixed */
         .jump-nav {
-            text-align: center;
-            margin-bottom: 2em;
-            position: sticky;
+            position: fixed; /* 讓導覽列固定在視窗中 */
             top: 0;
+            left: 0;
+            width: 100%; /* 寬度佔滿螢幕 */
+            text-align: center;
             background-color: #f5f5f5;
-            padding-top: 1em;
-            padding-bottom: 1em;
+            padding: 1em;
             border-bottom: 1px solid #ccc;
             z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 加上陰影讓它看起來有層次感 */
         }
 
         .jump-nav a {
@@ -100,13 +104,13 @@
 </head>
 <body>
 
+    <div class="jump-nav" id="jump-nav">
+        <a id="tw-stock-link">台股盤後</a>
+        <a id="us-stock-link">美股盤後</a>
+    </div>
+
     <div class="news-container">
         
-        <div class="jump-nav" id="jump-nav">
-            <a id="tw-stock-link">台股盤後</a>
-            <a id="us-stock-link">美股盤後</a>
-        </div>
-
         <div class="news-section">
             <h1 id="tw-stock-title">台股盤後新聞</h1>
             <div id="tw-stock-output"></div>
@@ -179,14 +183,12 @@
     fetchAndDisplayNews(twStockRss, 'tw-stock-output');
     fetchAndDisplayNews(usStockRss, 'us-stock-output');
 
-    // 獲取元素
     const twStockLink = document.getElementById('tw-stock-link');
     const usStockLink = document.getElementById('us-stock-link');
     const twStockTitle = document.getElementById('tw-stock-title');
     const usStockTitle = document.getElementById('us-stock-title');
     const jumpNav = document.getElementById('jump-nav');
 
-    // 定義捲動函式
     function scrollToElement(element) {
         if (element && jumpNav) {
             const navHeight = jumpNav.offsetHeight;
@@ -198,15 +200,14 @@
         }
     }
 
-    // 為連結綁定點擊事件
     twStockLink.addEventListener('click', (event) => {
         event.preventDefault();
         scrollToElement(twStockTitle);
     });
 
     usStockLink.addEventListener('click', (event) => {
-            event.preventDefault();
-            scrollToElement(usStockTitle);
+        event.preventDefault();
+        scrollToElement(usStockTitle);
     });
     </script>
 </body>

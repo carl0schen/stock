@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台股盤後新聞</title>
+    <title>台股與美股盤後新聞</title>
     
     <style>
-        /* 這裡的樣式會只影響這個頁面 */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             margin: 0;
@@ -14,17 +13,51 @@
         }
 
         .news-container {
-            max-width: 70ch; /* 讓內容寬度與網站風格一致 */
-            margin: auto; /* 置中 */
-            padding: 2em 1em; /* 內距 */
+            max-width: 70ch;
+            margin: auto;
+            padding: 2em 1em;
+        }
+
+        .news-section {
+            margin-bottom: 3em;
         }
         
-        .news-container h1 {
+        .news-section h1 {
             font-size: 2em;
             text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0.5em;
         }
         
-        /* 每一篇新聞的樣式 */
+        .jump-nav {
+            text-align: center;
+            margin-bottom: 2em;
+            position: sticky;
+            top: 0;
+            background-color: #f5f5f5;
+            padding-top: 1em;
+            padding-bottom: 1em;
+            border-bottom: 1px solid #ccc;
+            z-index: 1000;
+        }
+
+        .jump-nav a {
+            font-size: 1.2em;
+            text-decoration: none;
+            color: #007bff;
+            padding: 0 1em;
+            border-right: 1px solid #ccc;
+            cursor: pointer;
+        }
+
+        .jump-nav a:last-child {
+            border-right: none;
+        }
+        
+        .jump-nav a:hover {
+            text-decoration: underline;
+        }
+        
         .news-item {
             border-bottom: 1px solid #e0e0e0;
             padding-bottom: 1.5em;
@@ -32,10 +65,9 @@
         }
         
         .news-item:last-child {
-            border-bottom: none; /* 最後一則新聞不顯示底線 */
+            border-bottom: none;
         }
 
-        /* 標題樣式 */
         .news-item h2 {
             font-size: 1.2em;
             font-weight: bold;
@@ -44,20 +76,17 @@
             margin-bottom: 0.5em;
         }
 
-        /* 日期樣式 */
         .news-date {
             font-size: 0.8em;
             color: #666;
             margin-bottom: 0.5em;
         }
         
-        /* 內文樣式 */
         .news-item p {
             line-height: 1.6;
             color: #444;
         }
 
-        /* 連結樣式 */
         .news-item a {
             color: #007bff;
             text-decoration: none;
@@ -72,61 +101,113 @@
 <body>
 
     <div class="news-container">
-        <h1>台股盤後新聞</h1>
-        <div id="rss-output">
-            </div>
+        
+        <div class="jump-nav" id="jump-nav">
+            <a id="tw-stock-link">台股盤後</a>
+            <a id="us-stock-link">美股盤後</a>
+        </div>
+
+        <div class="news-section">
+            <h1 id="tw-stock-title">台股盤後新聞</h1>
+            <div id="tw-stock-output"></div>
+        </div>
+        
+        <div class="news-section">
+            <h1 id="us-stock-title">美股盤後新聞</h1>
+            <div id="us-stock-output"></div>
+        </div>
+
     </div>
 
     <script>
-    const rssFeedUrl = 'https://tw.stock.yahoo.com/rss?q=%E5%8F%B0%E8%82%A1%E7%9B%A4%E5%BE%8C';
-    const rss2jsonApi = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssFeedUrl)}`;
+    const newsToShow = 10;
 
-    fetch(rss2jsonApi)
-        .then(response => response.json())
-        .then(data => {
-            const output = document.getElementById('rss-output');
-            
-            if (data.status === 'ok' && data.items.length > 0) {
-                data.items.forEach(item => {
-                    const newsItem = document.createElement('div');
-                    newsItem.classList.add('news-item');
-                    
-                    const title = document.createElement('h2');
-                    title.textContent = item.title;
+    function fetchAndDisplayNews(rssFeedUrl, outputElementId) {
+        const rss2jsonApi = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssFeedUrl)}`;
+        const output = document.getElementById(outputElementId);
 
-                    const date = document.createElement('p');
-                    date.classList.add('news-date');
-                    date.textContent = new Date(item.pubDate).toLocaleDateString('zh-TW', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                    });
-                    
-                    const content = document.createElement('p');
-                    // 移除 HTML 標籤
-                    const cleanDescription = item.description.replace(/<[^>]*>?/gm, ''); 
-                    content.textContent = cleanDescription;
+        fetch(rss2jsonApi)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok' && data.items.length > 0) {
+                    for (let i = 0; i < newsToShow && i < data.items.length; i++) {
+                        const item = data.items[i];
+                        
+                        const newsItem = document.createElement('div');
+                        newsItem.classList.add('news-item');
+                        
+                        const title = document.createElement('h2');
+                        title.textContent = item.title;
+    
+                        const date = document.createElement('p');
+                        date.classList.add('news-date');
+                        date.textContent = new Date(item.pubDate).toLocaleDateString('zh-TW', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        
+                        const content = document.createElement('p');
+                        const cleanDescription = item.description.replace(/<[^>]*>?/gm, ''); 
+                        content.textContent = cleanDescription;
+    
+                        const link = document.createElement('a');
+                        link.href = item.link;
+                        link.textContent = '閱讀更多...';
+                        link.target = '_blank';
+                        
+                        newsItem.appendChild(title);
+                        newsItem.appendChild(date);
+                        newsItem.appendChild(content);
+                        newsItem.appendChild(link);
+                        
+                        output.appendChild(newsItem);
+                    }
+                } else {
+                    output.innerHTML = '<p>無法載入新聞資料，請稍後再試。</p>';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching RSS feed:', error);
+                output.innerHTML = '<p>載入新聞時發生錯誤，請檢查網路連線或稍後再試。</p>';
+            });
+    }
 
-                    const link = document.createElement('a');
-                    link.href = item.link;
-                    link.textContent = '閱讀更多...';
-                    link.target = '_blank';
-                    
-                    newsItem.appendChild(title);
-                    newsItem.appendChild(date);
-                    newsItem.appendChild(content);
-                    newsItem.appendChild(link);
-                    
-                    output.appendChild(newsItem);
-                });
-            } else {
-                output.innerHTML = '<p>無法載入新聞資料，請稍後再試。</p>';
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching RSS feed:', error);
-            document.getElementById('rss-output').innerHTML = '<p>載入新聞時發生錯誤，請檢查網路連線或稍後再試。</p>';
-        });
+    const twStockRss = 'https://tw.stock.yahoo.com/rss?q=%E5%8F%B0%E8%82%A1%E7%9B%A4%E5%BE%8C';
+    const usStockRss = 'https://tw.stock.yahoo.com/rss?q=%E7%BE%8E%E8%82%A1%E7%9B%A4%E5%BE%8C';
+    
+    fetchAndDisplayNews(twStockRss, 'tw-stock-output');
+    fetchAndDisplayNews(usStockRss, 'us-stock-output');
+
+    // 獲取元素
+    const twStockLink = document.getElementById('tw-stock-link');
+    const usStockLink = document.getElementById('us-stock-link');
+    const twStockTitle = document.getElementById('tw-stock-title');
+    const usStockTitle = document.getElementById('us-stock-title');
+    const jumpNav = document.getElementById('jump-nav');
+
+    // 定義捲動函式
+    function scrollToElement(element) {
+        if (element && jumpNav) {
+            const navHeight = jumpNav.offsetHeight;
+            const elementTop = element.getBoundingClientRect().top + window.scrollY;
+            window.scrollTo({
+                top: elementTop - navHeight,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    // 為連結綁定點擊事件
+    twStockLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        scrollToElement(twStockTitle);
+    });
+
+    usStockLink.addEventListener('click', (event) => {
+            event.preventDefault();
+            scrollToElement(usStockTitle);
+    });
     </script>
 </body>
 </html>

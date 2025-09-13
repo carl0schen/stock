@@ -4,24 +4,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>搜尋文章</title>
-       <style>
-       body {
-           margin: 0;
-           padding: 0;
-           height: 100vh;
-           display: flex;
-           justify-content: center;
-           align-items: center;
-           font-family: Arial, sans-serif;
-           background-color: #f5f5f5;
-       }
-       .error-message {
-           font-size: 36px;
-           font-weight: bold;
-           color: #333;
-           text-align: center;
-       }
-   </style>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column; /* 讓內容垂直排列 */
+            justify-content: center;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333; /* 統一文字顏色 */
+        }
+        
+        .search-container {
+            text-align: center; /* 讓容器內的文字置中 */
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 新增陰影效果 */
+        }
+        
+        .search-container h2 {
+            font-size: 24px; /* 設定標題字體大小 */
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .date-input {
+            padding: 10px;
+            font-size: 16px; /* 設定輸入框字體大小 */
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 200px;
+            margin-right: 10px;
+        }
+
+        .date-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .date-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
     <div class="search-container">

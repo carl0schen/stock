@@ -27,7 +27,7 @@ RSS訂閱：`https://stock.may.tw/rss.xml`
 電子郵件訂閱：使用[Feedrabbit](https://feedrabbit.com/)服務訂閱。
 
 
-### 台股語美股盤後新聞
+### 台股與美股盤後新聞
 
 來源：`https://tw.stock.yahoo.com/rss?q=台股盤後`
 來源：`https://tw.stock.yahoo.com/rss?q=美股盤後`

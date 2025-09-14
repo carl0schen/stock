@@ -2,61 +2,61 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://stock.may.tw/</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2025-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://stock.may.tw/rss.xml</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2025-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://stock.may.tw/search/</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2025-09-14</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://stock.may.tw/news/</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2025-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://stock.may.tw/20250912/</loc>
-    <lastmod>2025-09-13</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>1.0</priority>
+    <lastmod>2025-09-14</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://stock.may.tw/20250911/</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2025-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://stock.may.tw/20250910/</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2025-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://stock.may.tw/20250909/</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2025-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://stock.may.tw/20250908/</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2025-09-14</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://stock.may.tw/20250905/</loc>
-    <lastmod>2025-09-13</lastmod>
+    <lastmod>2025-09-14</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>

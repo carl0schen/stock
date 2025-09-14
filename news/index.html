@@ -124,10 +124,11 @@
     </div>
 
     <script>
-    const newsToShow = 15;
+    const apiKey = 'jyesrq7ggga2da4ymsvj5mxeru8dbqueqwwykxgc';
+    const newsToShow = 15; 
 
     function fetchAndDisplayNews(rssFeedUrl, outputElementId) {
-        const rss2jsonApi = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssFeedUrl)}`;
+        const rss2jsonApi = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssFeedUrl)}&count=${newsToShow}&api_key=${apiKey}`;
         const output = document.getElementById(outputElementId);
 
         fetch(rss2jsonApi)

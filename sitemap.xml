@@ -25,6 +25,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://stock.may.tw/20250915/</loc>
+    <lastmod>2025-09-15</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
     <loc>https://stock.may.tw/20250912/</loc>
     <lastmod>2025-09-15</lastmod>
     <changefreq>daily</changefreq>

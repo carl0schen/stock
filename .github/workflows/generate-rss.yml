@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '20*/??/??/**' # 監控 /YYYY/MM/DD/ 資料夾內的變更
+      - '20**/**/index.html' # 監控所有以 '20' 開頭的資料夾下的 index.html 變動
   workflow_dispatch:  # 允許手動觸發
 
 jobs:

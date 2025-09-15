@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '202[0-9][0-9][0-9][0-9][0-9]/**'  # 監控日期資料夾的變更
+      - '20*/??/??/**' # 監控 /YYYY/MM/DD/ 資料夾內的變更
   workflow_dispatch:  # 允許手動觸發
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
       if: github.event_name == 'push'
       run: |
         echo "等待其他 workflow 完成..."
-        sleep 60  # 等待 60 秒讓其他 workflow 先執行
+        sleep 30 # 等待 30 秒讓其他 workflow 先執行
     
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -38,28 +38,55 @@ jobs:
 
         // RSS 模板
         const rssHeader = `<?xml version="1.0" encoding="UTF-8"?>
-        <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-          <channel>
-            <title>台股盤後 - 法人買賣超整理</title>
-            <link>https://stock.may.tw</link>
-            <description>利用AI彙整台股盤後資訊，快速掃描法人當日籌碼。</description>
-            <language>zh-TW</language>
-            <atom:link href="https://stock.may.tw/rss.xml" rel="self" type="application/rss+xml"/>
-            <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`;
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>台股盤後 - 法人買賣超整理</title>
+    <link>https://stock.may.tw</link>
+    <description>利用AI彙整台股盤後資訊，快速掃描法人當日籌碼。</description>
+    <language>zh-TW</language>
+    <atom:link href="https://stock.may.tw/rss.xml" rel="self" type="application/rss+xml"/>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`;
 
         const rssFooter = `  </channel>
-        </rss>`;
+</rss>`;
 
-        // 獲取所有日期資料夾
-        const getAllDateFolders = () => {
-          const folders = fs.readdirSync('.')
-            .filter(item => {
-              const stat = fs.statSync(item);
-              return stat.isDirectory() && /^\d{8}$/.test(item);
-            })
-            .sort((a, b) => b.localeCompare(a)); // 降序排列，最新的在前
-          
+        // 遞迴尋找符合 YYYY/MM/DD/ 格式的資料夾
+        const getArticleFolders = (dirPath) => {
+          let folders = [];
+          const items = fs.readdirSync(dirPath, { withFileTypes: true });
+
+          for (const item of items) {
+            if (item.isDirectory()) {
+              const fullPath = path.join(dirPath, item.name);
+              // 檢查資料夾名稱是否符合月份或日期格式
+              if (/^\d{2}$/.test(item.name)) {
+                // 如果是日期資料夾，檢查是否存在 index.html
+                const articlePath = path.join(fullPath, 'index.html');
+                if (fs.existsSync(articlePath)) {
+                  folders.push(fullPath);
+                } else {
+                  // 如果是月份資料夾，繼續遞迴搜尋
+                  folders = folders.concat(getArticleFolders(fullPath));
+                }
+              } else if (/^\d{4}$/.test(item.name)) {
+                // 如果是年份資料夾，繼續遞迴搜尋
+                folders = folders.concat(getArticleFolders(fullPath));
+              }
+            }
+          }
           return folders;
+        };
+
+        // 從路徑中解析出 YYYYMMDD 日期字串
+        const parseDateFromPath = (pathStr) => {
+          const parts = pathStr.split(path.sep).filter(p => p !== '');
+          if (parts.length >= 3) {
+            const year = parts[parts.length - 3];
+            const month = parts[parts.length - 2];
+            const day = parts[parts.length - 1];
+            return `${year}${month}${day}`;
+          }
+          return null;
         };
 
         // 格式化日期顯示
@@ -82,15 +109,18 @@ jobs:
         // 生成 RSS 項目
         const generateRSSItems = (folders) => {
           return folders.slice(0, 10).map(folder => { // 只取最新 10 筆
-            const title = `${formatDate(folder)} 法人買賣超整理`;
+            const dateStr = parseDateFromPath(folder);
+            if (!dateStr) return '';
+            
+            const title = `${formatDate(dateStr)} 法人買賣超整理`;
             const link = `https://stock.may.tw/${folder}/`;
-            const pubDate = toRSSDate(folder);
+            const pubDate = toRSSDate(dateStr);
             const guid = `https://stock.may.tw/${folder}/`;
             
-            return `    <item>
+            return `  <item>
               <title>${title}</title>
               <link>${link}</link>
-              <description>本文整理了${formatDate(folder)}台股盤後三大法人的交易動向。</description>
+              <description>本文整理了${formatDate(dateStr)}台股盤後三大法人的交易動向。</description>
               <pubDate>${pubDate}</pubDate>
               <guid isPermaLink="true">${guid}</guid>
             </item>`;
@@ -100,11 +130,14 @@ jobs:
         // 主程序
         const main = () => {
           try {
-            const folders = getAllDateFolders();
-            console.log(`找到 ${folders.length} 個日期資料夾`);
+            const folders = getArticleFolders('.');
+            console.log(`找到 ${folders.length} 個文章資料夾`);
             
+            // 依日期排序，確保最新的在前
+            folders.sort((a, b) => parseDateFromPath(b).localeCompare(parseDateFromPath(a)));
+
             if (folders.length === 0) {
-              console.log('沒有找到任何日期資料夾');
+              console.log('沒有找到任何文章資料夾');
               return;
             }
 
@@ -127,55 +160,15 @@ jobs:
 
     - name: Commit and push RSS file with retry
       run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
         git add rss.xml
         
-        if git diff --staged --quiet; then
+        if ! git diff --staged --quiet; then
+          git commit -m "🤖 Auto-update RSS feed"
+          git push
+        else
           echo "RSS 檔案沒有變更"
           exit 0
         fi
-        
-        # 提交變更
-        git commit -m "🤖 Auto-update RSS feed"
-        
-        # 推送時加入重試機制
-        max_attempts=3
-        attempt=1
-        
-        while [ $attempt -le $max_attempts ]; do
-          echo "嘗試推送 RSS 更新 (第 $attempt 次)..."
-          
-          if git push; then
-            echo "✅ RSS 推送成功!"
-            exit 0
-          else
-            echo "❌ 推送失敗，準備重試..."
-            
-            if [ $attempt -eq $max_attempts ]; then
-              echo "❌ 已達最大重試次數 ($max_attempts)，放棄推送"
-              exit 1
-            fi
-            
-            echo "🔄 拉取遠端變更並重新嘗試..."
-            # 先拉取最新變更
-            if git pull --rebase origin main; then
-              echo "✅ 成功同步遠端變更"
-            else
-              echo "⚠️ 同步時出現問題，嘗試強制同步..."
-              git rebase --abort 2>/dev/null || true
-              git fetch origin main
-              git reset --hard origin/main
-              git add rss.xml
-              git commit -m "🤖 Auto-update RSS feed"
-            fi
-            
-            # 等待隨機時間避免衝突
-            sleep_time=$((5 + RANDOM % 5))  # 5-9秒隨機等待
-            echo "⏳ 等待 $sleep_time 秒後重試..."
-            sleep $sleep_time
-          fi
-          
-          attempt=$((attempt + 1))
-        done
         

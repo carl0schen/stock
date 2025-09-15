@@ -15,9 +15,8 @@
         .news-container {
             max-width: 70ch;
             margin: auto;
-            /* 這裡新增 padding-top 來避免導覽列遮住內容 */
             padding: 2em 1em 2em; 
-            padding-top: 5em; /* 這裡的 padding-top 數值可以依據導覽列的高度調整 */
+            padding-top: 5em;
         }
 
         .news-section {
@@ -31,18 +30,17 @@
             padding-bottom: 0.5em;
         }
         
-        /* 導覽列樣式：改為 position: fixed */
         .jump-nav {
-            position: fixed; /* 讓導覽列固定在視窗中 */
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%; /* 寬度佔滿螢幕 */
+            width: 100%;
             text-align: center;
             background-color: #f5f5f5;
             padding: 1em;
             border-bottom: 1px solid #ccc;
             z-index: 1000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* 加上陰影讓它看起來有層次感 */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .jump-nav a {
@@ -100,6 +98,22 @@
         .news-item a:hover {
             text-decoration: underline;
         }
+        
+        /* 讀取中訊息的樣式 */
+        .loading-message {
+            text-align: center;
+            font-size: 1.2em;
+            color: #888;
+            margin-top: 2em;
+        }
+
+        .loading-message-tw, .loading-message-us {
+            text-align: center;
+            font-size: 1.2em;
+            color: #888;
+            margin-top: 2em;
+        }
+
     </style>
 </head>
 <body>
@@ -113,27 +127,36 @@
         
         <div class="news-section">
             <h1 id="tw-stock-title">台股盤後新聞</h1>
+            <div id="loading-tw" class="loading-message-tw">讀取中...</div>
             <div id="tw-stock-output"></div>
         </div>
         
         <div class="news-section">
             <h1 id="us-stock-title">美股盤後新聞</h1>
+            <div id="loading-us" class="loading-message-us">讀取中...</div>
             <div id="us-stock-output"></div>
         </div>
 
     </div>
 
     <script>
+    const newsToShow = 15;
     const apiKey = 'jyesrq7ggga2da4ymsvj5mxeru8dbqueqwwykxgc';
-    const newsToShow = 15; 
 
-    function fetchAndDisplayNews(rssFeedUrl, outputElementId) {
+    function fetchAndDisplayNews(rssFeedUrl, outputElementId, loadingElementId) {
         const rss2jsonApi = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssFeedUrl)}&count=${newsToShow}&api_key=${apiKey}`;
         const output = document.getElementById(outputElementId);
+        const loadingMessage = document.getElementById(loadingElementId);
+
+        // 顯示讀取中訊息
+        loadingMessage.style.display = 'block';
 
         fetch(rss2jsonApi)
             .then(response => response.json())
             .then(data => {
+                // 隱藏讀取中訊息
+                loadingMessage.style.display = 'none';
+
                 if (data.status === 'ok' && data.items.length > 0) {
                     for (let i = 0; i < newsToShow && i < data.items.length; i++) {
                         const item = data.items[i];
@@ -173,6 +196,8 @@
                 }
             })
             .catch(error => {
+                // 載入失敗也隱藏讀取中訊息
+                loadingMessage.style.display = 'none';
                 console.error('Error fetching RSS feed:', error);
                 output.innerHTML = '<p>載入新聞時發生錯誤，請檢查網路連線或稍後再試。</p>';
             });
@@ -181,8 +206,9 @@
     const twStockRss = 'https://tw.stock.yahoo.com/rss?q=%E5%8F%B0%E8%82%A1%E7%9B%A4%E5%BE%8C';
     const usStockRss = 'https://tw.stock.yahoo.com/rss?q=%E7%BE%8E%E8%82%A1%E7%9B%A4%E5%BE%8C';
     
-    fetchAndDisplayNews(twStockRss, 'tw-stock-output');
-    fetchAndDisplayNews(usStockRss, 'us-stock-output');
+    // 呼叫函式時，傳入讀取訊息的 ID
+    fetchAndDisplayNews(twStockRss, 'tw-stock-output', 'loading-tw');
+    fetchAndDisplayNews(usStockRss, 'us-stock-output', 'loading-us');
 
     const twStockLink = document.getElementById('tw-stock-link');
     const usStockLink = document.getElementById('us-stock-link');

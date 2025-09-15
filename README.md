@@ -24,7 +24,7 @@
 ### 文章訂閱
 
 RSS訂閱：`https://stock.may.tw/rss.xml`  
-電子郵件訂閱：使用[Feedrabbit](https://feedrabbit.com/)服務訂閱。
+電子郵件訂閱：使用[Feedrabbit](https://feedrabbit.com/)服務訂閱。  
 Telegram訂閱：使用[RSS-to-Telegram-Bot](https://t.me/RSStT_Bot)訂閱。
 
 ### 盤後新聞

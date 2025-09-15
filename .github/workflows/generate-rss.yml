@@ -5,7 +5,7 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '20**/**/index.html' # 監控所有以 '20' 開頭的資料夾下的 index.html 變動
+      - '20*/[0-9][0-9]/[0-9][0-9]/**'  # 監控新的資料夾結構 2025/09/05/
   workflow_dispatch:  # 允許手動觸發
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
       if: github.event_name == 'push'
       run: |
         echo "等待其他 workflow 完成..."
-        sleep 30 # 等待 30 秒讓其他 workflow 先執行
+        sleep 60  # 等待 60 秒讓其他 workflow 先執行
     
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -32,118 +32,129 @@ jobs:
 
     - name: Generate RSS Feed
       run: |
-        # 使用 'EOF' 標誌，並將腳本寫入檔案
         cat > generate-rss.js << 'EOF'
         const fs = require('fs');
         const path = require('path');
-        const { XMLBuilder } = require('fast-xml-parser');
 
-        const builder = new XMLBuilder({
-          format: true,
-          ignoreAttributes: false
-        });
+        // RSS 模板
+        const rssHeader = `<?xml version="1.0" encoding="UTF-8"?>
+        <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+          <channel>
+            <title>台股盤後 - 法人買賣超整理</title>
+            <link>https://stock.may.tw</link>
+            <description>利用AI彙整台股盤後資訊，快速掃描法人當日籌碼。</description>
+            <language>zh-TW</language>
+            <atom:link href="https://stock.may.tw/rss.xml" rel="self" type="application/rss+xml"/>
+            <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`;
 
-        const rssTemplate = {
-          rss: {
-            '@_version': '2.0',
-            '@_xmlns:atom': 'http://www.w3.org/2005/Atom',
-            channel: {
-              title: '台股盤後 - 法人買賣超整理',
-              link: 'https://stock.may.tw',
-              description: '利用AI彙整台股盤後資訊，快速掃描法人當日籌碼。',
-              language: 'zh-TW',
-              'atom:link': {
-                '@_href': 'https://stock.may.tw/rss.xml',
-                '@_rel': 'self',
-                '@_type': 'application/rss+xml'
-              },
-              lastBuildDate: new Date().toUTCString(),
-              item: []
-            }
-          }
-        };
+        const rssFooter = `  </channel>
+        </rss>`;
 
-        const getArticleFolders = (dirPath) => {
-          let folders = [];
-          const items = fs.readdirSync(dirPath, { withFileTypes: true });
-
-          for (const item of items) {
-            if (item.isDirectory()) {
-              const fullPath = path.join(dirPath, item.name);
-              if (/^\d{4}$/.test(item.name)) {
-                folders = folders.concat(getArticleFolders(fullPath));
-              } else if (/^\d{2}$/.test(item.name)) {
-                if (fs.existsSync(path.join(fullPath, 'index.html'))) {
-                  folders.push(fullPath);
-                } else {
-                  folders = folders.concat(getArticleFolders(fullPath));
+        // 獲取所有日期資料夾
+        const getAllDateFolders = () => {
+          const folders = [];
+          
+          // 掃描年份資料夾 (2024, 2025, etc.)
+          const yearFolders = fs.readdirSync('.')
+            .filter(item => {
+              const stat = fs.statSync(item);
+              return stat.isDirectory() && /^20\d{2}$/.test(item); // 匹配 20XX 年份
+            });
+          
+          yearFolders.forEach(year => {
+            const yearPath = `./${year}`;
+            if (fs.existsSync(yearPath)) {
+              // 掃描月份資料夾 (01, 02, ..., 12)
+              const monthFolders = fs.readdirSync(yearPath)
+                .filter(item => {
+                  const stat = fs.statSync(path.join(yearPath, item));
+                  return stat.isDirectory() && /^(0[1-9]|1[0-2])$/.test(item); // 匹配 01-12
+                });
+              
+              monthFolders.forEach(month => {
+                const monthPath = path.join(yearPath, month);
+                if (fs.existsSync(monthPath)) {
+                  // 掃描日期資料夾 (01, 02, ..., 31)
+                  const dayFolders = fs.readdirSync(monthPath)
+                    .filter(item => {
+                      const stat = fs.statSync(path.join(monthPath, item));
+                      return stat.isDirectory() && /^(0[1-9]|[12]\d|3[01])$/.test(item); // 匹配 01-31
+                    });
+                  
+                  dayFolders.forEach(day => {
+                    const fullPath = `${year}/${month}/${day}`;
+                    const indexPath = path.join(monthPath, day, 'index.html');
+                    
+                    // 確認該路徑有 index.html
+                    if (fs.existsSync(indexPath)) {
+                      folders.push({
+                        path: fullPath,
+                        dateStr: `${year}${month}${day}`, // 用於排序的日期字串
+                        year: year,
+                        month: month,
+                        day: day
+                      });
+                    }
+                  });
                 }
-              }
+              });
             }
-          }
-          return folders;
+          });
+          
+          // 按日期降序排列（最新的在前）
+          return folders.sort((a, b) => b.dateStr.localeCompare(a.dateStr));
         };
 
-        const parseDateFromPath = (pathStr) => {
-          const parts = pathStr.split(path.sep).filter(p => p !== '');
-          if (parts.length >= 3) {
-            const year = parts[parts.length - 3];
-            const month = parts[parts.length - 2];
-            const day = parts[parts.length - 1];
-            return `${year}${month}${day}`;
-          }
-          return null;
+        // 格式化日期顯示
+        const formatDate = (folderInfo) => {
+          return `${folderInfo.year}年${folderInfo.month}月${folderInfo.day}日`;
         };
 
-        const formatDate = (dateStr) => {
-          const year = dateStr.substring(0, 4);
-          const month = dateStr.substring(4, 6);
-          const day = dateStr.substring(6, 8);
-          return `${year}年${month}月${day}日`;
-        };
-
-        const toRSSDate = (dateStr) => {
-          const year = dateStr.substring(0, 4);
-          const month = dateStr.substring(4, 6);
-          const day = dateStr.substring(6, 8);
-          const date = new Date(year, month - 1, day, 16, 30, 0);
+        // 轉換為 RSS 日期格式
+        const toRSSDate = (folderInfo) => {
+          const date = new Date(folderInfo.year, folderInfo.month - 1, folderInfo.day, 16, 30, 0); // 下午4點半
           return date.toUTCString();
         };
 
+        // 生成 RSS 項目
         const generateRSSItems = (folders) => {
-          return folders.slice(0, 10).map(folder => {
-            const dateStr = parseDateFromPath(folder);
-            if (!dateStr) return null;
+          return folders.slice(0, 10).map(folderInfo => { // 只取最新 10 筆
+            const title = `${formatDate(folderInfo)} 法人買賣超整理`;
+            const link = `https://stock.may.tw/${folderInfo.path}/`;
+            const pubDate = toRSSDate(folderInfo);
+            const guid = `https://stock.may.tw/${folderInfo.path}/`;
             
-            return {
-              title: `${formatDate(dateStr)} 法人買賣超整理`,
-              link: `https://stock.may.tw/${folder}/`,
-              description: `本文整理了${formatDate(dateStr)}台股盤後三大法人的交易動向。`,
-              pubDate: toRSSDate(dateStr),
-              guid: {
-                '@_isPermaLink': 'true',
-                '#text': `https://stock.may.tw/${folder}/`
-              }
-            };
-          }).filter(item => item !== null);
+            return `    <item>
+              <title>${title}</title>
+              <link>${link}</link>
+              <description>本文整理了${formatDate(folderInfo)}台股盤後三大法人的交易動向。</description>
+              <pubDate>${pubDate}</pubDate>
+              <guid isPermaLink="true">${guid}</guid>
+            </item>`;
+          }).join('\n');
         };
 
+        // 主程序
         const main = () => {
           try {
-            const folders = getArticleFolders('.');
-            console.log(`找到 ${folders.length} 個文章資料夾`);
+            const folders = getAllDateFolders();
+            console.log(`找到 ${folders.length} 個日期資料夾`);
             
-            folders.sort((a, b) => parseDateFromPath(b).localeCompare(parseDateFromPath(a)));
-
             if (folders.length === 0) {
-              console.log('沒有找到任何文章資料夾');
+              console.log('沒有找到任何日期資料夾');
               return;
             }
-
-            rssTemplate.rss.channel.item = generateRSSItems(folders);
-            const xmlContent = builder.build(rssTemplate);
             
-            fs.writeFileSync('rss.xml', xmlContent, 'utf8');
+            // 顯示找到的資料夾（用於除錯）
+            console.log('最新的幾個資料夾:');
+            folders.slice(0, 5).forEach(folder => {
+              console.log(`  ${folder.path} (${folder.dateStr})`);
+            });
+
+            const rssItems = generateRSSItems(folders);
+            const rssContent = `${rssHeader}\n${rssItems}\n${rssFooter}`;
+            
+            fs.writeFileSync('rss.xml', rssContent, 'utf8');
             console.log('RSS feed 生成完成');
             console.log(`包含 ${Math.min(folders.length, 10)} 個項目`);
           } catch (error) {
@@ -154,22 +165,59 @@ jobs:
 
         main();
         EOF
-        
-        # 安裝 fast-xml-parser
-        npm install fast-xml-parser --prefix .github/workflows
+
         node generate-rss.js
 
     - name: Commit and push RSS file with retry
       run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
         git add rss.xml
         
-        if ! git diff --staged --quiet; then
-          git commit -m "🤖 Auto-update RSS feed"
-          git push
-        else
+        if git diff --staged --quiet; then
           echo "RSS 檔案沒有變更"
           exit 0
         fi
         
+        # 提交變更
+        git commit -m "🤖 Auto-update RSS feed"
+        
+        # 推送時加入重試機制
+        max_attempts=3
+        attempt=1
+        
+        while [ $attempt -le $max_attempts ]; do
+          echo "嘗試推送 RSS 更新 (第 $attempt 次)..."
+          
+          if git push; then
+            echo "✅ RSS 推送成功!"
+            exit 0
+          else
+            echo "❌ 推送失敗，準備重試..."
+            
+            if [ $attempt -eq $max_attempts ]; then
+              echo "❌ 已達最大重試次數 ($max_attempts)，放棄推送"
+              exit 1
+            fi
+            
+            echo "🔄 拉取遠端變更並重新嘗試..."
+            # 先拉取最新變更
+            if git pull --rebase origin main; then
+              echo "✅ 成功同步遠端變更"
+            else
+              echo "⚠️ 同步時出現問題，嘗試強制同步..."
+              git rebase --abort 2>/dev/null || true
+              git fetch origin main
+              git reset --hard origin/main
+              git add rss.xml
+              git commit -m "🤖 Auto-update RSS feed"
+            fi
+            
+            # 等待隨機時間避免衝突
+            sleep_time=$((5 + RANDOM % 5))  # 5-9秒隨機等待
+            echo "⏳ 等待 $sleep_time 秒後重試..."
+            sleep $sleep_time
+          fi
+          
+          attempt=$((attempt + 1))
+        done

@@ -99,19 +99,20 @@
             text-decoration: underline;
         }
         
-        /* 讀取中訊息的樣式 */
-        .loading-message {
+        .loading-message-tw, .loading-message-us {
             text-align: center;
             font-size: 1.2em;
             color: #888;
             margin-top: 2em;
         }
 
-        .loading-message-tw, .loading-message-us {
+        .source-attribution {
             text-align: center;
-            font-size: 1.2em;
-            color: #888;
-            margin-top: 2em;
+            margin-top: 3em;
+            font-size: 0.9em;
+            color: #777;
+            border-top: 1px solid #ddd;
+            padding-top: 1.5em;
         }
 
     </style>
@@ -137,24 +138,26 @@
             <div id="us-stock-output"></div>
         </div>
 
+        <div class="source-attribution">
+            資料來源：<a href="https://tw.stock.yahoo.com/" target="_blank">Yahoo 奇摩股市</a>
+        </div>
+
     </div>
 
     <script>
     const newsToShow = 15;
-    const apiKey = 'jyesrq7ggga2da4ymsvj5mxeru8dbqueqwwykxgc';
+    const apiKey = 'jyesrq7ggga2da4ymsvj5mxeru8dbqueqwwykxgc'; // 替換為你的金鑰
 
     function fetchAndDisplayNews(rssFeedUrl, outputElementId, loadingElementId) {
         const rss2jsonApi = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssFeedUrl)}&count=${newsToShow}&api_key=${apiKey}`;
         const output = document.getElementById(outputElementId);
         const loadingMessage = document.getElementById(loadingElementId);
 
-        // 顯示讀取中訊息
         loadingMessage.style.display = 'block';
 
         fetch(rss2jsonApi)
             .then(response => response.json())
             .then(data => {
-                // 隱藏讀取中訊息
                 loadingMessage.style.display = 'none';
 
                 if (data.status === 'ok' && data.items.length > 0) {
@@ -196,7 +199,6 @@
                 }
             })
             .catch(error => {
-                // 載入失敗也隱藏讀取中訊息
                 loadingMessage.style.display = 'none';
                 console.error('Error fetching RSS feed:', error);
                 output.innerHTML = '<p>載入新聞時發生錯誤，請檢查網路連線或稍後再試。</p>';
@@ -206,7 +208,6 @@
     const twStockRss = 'https://tw.stock.yahoo.com/rss?q=%E5%8F%B0%E8%82%A1%E7%9B%A4%E5%BE%8C';
     const usStockRss = 'https://tw.stock.yahoo.com/rss?q=%E7%BE%8E%E8%82%A1%E7%9B%A4%E5%BE%8C';
     
-    // 呼叫函式時，傳入讀取訊息的 ID
     fetchAndDisplayNews(twStockRss, 'tw-stock-output', 'loading-tw');
     fetchAndDisplayNews(usStockRss, 'us-stock-output', 'loading-us');
 

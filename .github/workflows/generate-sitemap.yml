@@ -5,8 +5,8 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '20*/*/index.html'  # 當新的日期資料夾內的 index.html 檔案有變動時
-      - '20*/*/**'         # 或是整個年份/月份資料夾有變動
+      - '20*/*/index.html'  # 新結構：2025/09/index.html
+      - '20*/**'            # 或是整個日期資料夾有變動
   
   # 每天早上自動執行一次
   schedule:
@@ -31,7 +31,7 @@ jobs:
         echo '<?xml version="1.0" encoding="UTF-8"?>' > sitemap.xml
         echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' >> sitemap.xml
         
-        # 處理首頁
+        # 處理首頁（如果存在）
         if [ -f "index.html" ]; then
           last_mod=$(date -r index.html +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
           echo "  <url>" >> sitemap.xml
@@ -43,42 +43,73 @@ jobs:
           echo "已加入首頁"
         fi
         
+        # 加入 RSS feed
+        echo "  <url>" >> sitemap.xml
+        echo "    <loc>https://stock.may.tw/rss.xml</loc>" >> sitemap.xml
+        echo "    <lastmod>$(date +%Y-%m-%d)</lastmod>" >> sitemap.xml
+        echo "    <changefreq>daily</changefreq>" >> sitemap.xml
+        echo "    <priority>0.8</priority>" >> sitemap.xml
+        echo "  </url>" >> sitemap.xml
+        echo "已加入 RSS feed"
+        
         # 加入搜尋頁面
-        if [ -f "search/index.html" ]; then
-          last_mod=$(date -r search/index.html +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
-          echo "  <url>" >> sitemap.xml
-          echo "    <loc>https://stock.may.tw/search/</loc>" >> sitemap.xml
-          echo "    <lastmod>$last_mod</lastmod>" >> sitemap.xml
-          echo "    <changefreq>monthly</changefreq>" >> sitemap.xml
-          echo "    <priority>0.7</priority>" >> sitemap.xml
-          echo "  </url>" >> sitemap.xml
-          echo "已加入搜尋頁面"
-        fi
+        echo "  <url>" >> sitemap.xml
+        echo "    <loc>https://stock.may.tw/search/</loc>" >> sitemap.xml
+        echo "    <lastmod>$(date +%Y-%m-%d)</lastmod>" >> sitemap.xml
+        echo "    <changefreq>monthly</changefreq>" >> sitemap.xml
+        echo "    <priority>0.7</priority>" >> sitemap.xml
+        echo "  </url>" >> sitemap.xml
+        echo "已加入搜尋頁面"
         
         # 加入新聞頁面
-        if [ -f "news/index.html" ]; then
-          last_mod=$(date -r news/index.html +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
-          echo "  <url>" >> sitemap.xml
-          echo "    <loc>https://stock.may.tw/news/</loc>" >> sitemap.xml
-          echo "    <lastmod>$last_mod</lastmod>" >> sitemap.xml
-          echo "    <changefreq>daily</changefreq>" >> sitemap.xml
-          echo "    <priority>0.7</priority>" >> sitemap.xml
-          echo "  </url>" >> sitemap.xml
-          echo "已加入新聞頁面"
-        fi
-
-        # 處理文章資料夾
-        echo "開始處理文章資料夾..."
-        for dir in 20*/??/??/; do
-          if [ -d "$dir" ] && [ -f "${dir}index.html" ]; then
+        echo "  <url>" >> sitemap.xml
+        echo "    <loc>https://stock.may.tw/news/</loc>" >> sitemap.xml
+        echo "    <lastmod>$(date +%Y-%m-%d)</lastmod>" >> sitemap.xml
+        echo "    <changefreq>daily</changefreq>" >> sitemap.xml
+        echo "    <priority>0.7</priority>" >> sitemap.xml
+        echo "  </url>" >> sitemap.xml
+        echo "已加入新聞頁面"
+        
+        # 收集所有日期資料夾 (新結構: YYYY/MM/DD/)
+        folders=()
+        for year_dir in 20*/; do
+          if [[ -d "$year_dir" && ${year_dir%/} =~ ^20[0-9]{2}$ ]]; then
+            for month_dir in "${year_dir}"*/; do
+              if [[ -d "$month_dir" && $(basename "$month_dir") =~ ^(0[1-9]|1[0-2])$ ]]; then
+                for day_dir in "${month_dir}"*/; do
+                  if [[ -d "$day_dir" && $(basename "$day_dir") =~ ^(0[1-9]|[12][0-9]|3[01])$ ]] && [ -f "${day_dir}index.html" ]; then
+                    # 移除末尾的斜線並加入陣列
+                    folder_path="${day_dir%/}"
+                    folders+=("$folder_path")
+                  fi
+                done
+              fi
+            done
+          fi
+        done
+        
+        # 按日期排序（最新的在前）- 根據路徑排序
+        IFS=$'\n' sorted_folders=($(printf '%s\n' "${folders[@]}" | sort -r))
+        unset IFS
+        
+        # 為每個資料夾生成 sitemap 條目
+        count=0
+        for folder in "${sorted_folders[@]}"; do
+          if [ -f "${folder}/index.html" ]; then
             # 獲取檔案修改時間
-            last_mod=$(date -r "${dir}index.html" +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
-
+            last_mod=$(date -r "${folder}/index.html" +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)
+            
+            # 從路徑解析日期 (YYYY/MM/DD)
+            year=$(echo "$folder" | cut -d'/' -f1)
+            month=$(echo "$folder" | cut -d'/' -f2)
+            day=$(echo "$folder" | cut -d'/' -f3)
+            
+            # 計算天數差異來設定優先級和更新頻率
+            folder_date=$(date -d "${year}-${month}-${day}" +%s 2>/dev/null || date +%s)
+            current_date=$(date +%s)
+            days_diff=$(( (current_date - folder_date) / 86400 ))
+            
             # 根據資料新舊設定參數
-            now=$(date +%s)
-            file_date=$(date -d "${dir:0:4}-${dir:5:2}-${dir:8:2}" +%s 2>/dev/null || date +%s)
-            days_diff=$(( (now - file_date) / 86400 ))
-
             if [ $days_diff -le 1 ]; then
               priority="1.0"
               changefreq="hourly"
@@ -92,37 +123,65 @@ jobs:
               priority="0.5"
               changefreq="monthly"
             fi
-
+            
             echo "  <url>" >> sitemap.xml
-            echo "    <loc>https://stock.may.tw/${dir}</loc>" >> sitemap.xml
+            echo "    <loc>https://stock.may.tw/$folder/</loc>" >> sitemap.xml
             echo "    <lastmod>$last_mod</lastmod>" >> sitemap.xml
             echo "    <changefreq>$changefreq</changefreq>" >> sitemap.xml
             echo "    <priority>$priority</priority>" >> sitemap.xml
             echo "  </url>" >> sitemap.xml
-            echo "已處理: $dir ($days_diff 天前)"
+            
+            count=$((count + 1))
+            echo "已處理: $folder ($days_diff 天前)"
           fi
         done
         
         echo '</urlset>' >> sitemap.xml
-        echo "Sitemap 生成完成。"
+        echo "Sitemap 生成完成，包含 $count 個頁面"
         
-    - name: Commit and push sitemap
+    - name: Force commit sitemap
       run: |
-        git config --local user.email "github-actions[bot]@users.noreply.github.com"
-        git config --local user.name "github-actions[bot]"
-        git add sitemap.xml
+        echo "=== Git 狀態檢查 ==="
+        git status
+        echo ""
         
-        if ! git diff --staged --quiet; then
-          git commit -m "🤖 自動更新 sitemap - $(date +'%Y-%m-%d %H:%M:%S')"
-          git push
-        else
-          echo "沒有 sitemap 變更，不進行提交。"
+        # 設定 Git 使用者資訊
+        git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        
+        echo "=== 強制加入 sitemap.xml ==="
+        # 確保檔案被追蹤
+        git add sitemap.xml --force
+        git status
+        
+        echo "=== 提交變更 ==="
+        if git diff --staged --quiet; then
+          echo "沒有檔案被 staged，嘗試強制加入..."
+          ls -la sitemap.xml
+          git add .
+          git status
         fi
-
+        
+        # 無論如何都嘗試提交
+        git commit -m "🤖 自動更新 sitemap - $(date +'%Y-%m-%d %H:%M:%S')" || echo "提交失敗或沒有變更"
+        
+        echo "=== 推送變更 ==="
+        git push origin main || echo "推送失敗"
+        
+        echo "=== 最終檢查 ==="
+        if [ -f "sitemap.xml" ]; then
+          echo "✓ sitemap.xml 存在於工作目錄"
+        else
+          echo "✗ sitemap.xml 不存在"
+        fi
+        
     - name: Display sitemap info
       run: |
         echo "=== Sitemap 資訊 ==="
         echo "檔案大小: $(wc -c < sitemap.xml) bytes"
         echo "包含頁面數: $(grep -c '<loc>' sitemap.xml)"
         echo "最近5筆資料:"
-        grep '<loc>' sitemap.xml | head -n 5
+        grep '<loc>' sitemap.xml | head -5 | sed 's/.*<loc>\(.*\)<\/loc>.*/  \1/'
+        echo ""
+        echo "Sitemap 位置: https://stock.may.tw/sitemap.xml"
+        

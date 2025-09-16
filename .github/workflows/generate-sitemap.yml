@@ -8,9 +8,9 @@ on:
       - '20*/*/index.html'  # 新結構：2025/09/index.html
       - '20*/**'            # 或是整個日期資料夾有變動
   
-  # 每天早上自動執行一次
+  # 每天自動執行一次
   schedule:
-    - cron: '0 1 * * *'  # UTC 1:00 AM (台灣時間 9:00 AM)
+    - cron: '0 10 * * *'  # UTC 10:00 AM (台灣時間 6:00 PM)
   
   # 允許手動觸發
   workflow_dispatch:

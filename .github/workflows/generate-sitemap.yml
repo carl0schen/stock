@@ -8,9 +8,9 @@ on:
       - '20*/*/index.html'  # 新結構：2025/09/index.html
       - '20*/**'            # 或是整個日期資料夾有變動
   
-  # 每天自動執行一次
+  # 每天早上自動執行一次
   schedule:
-    - cron: '0 10 * * *'  # UTC 10:00 AM (台灣時間 6:00 PM)
+    - cron: '0 10 * * *'  # UTC 1:00 AM (台灣時間 6:00 PM)
   
   # 允許手動觸發
   workflow_dispatch:
@@ -70,8 +70,14 @@ jobs:
         echo "  </url>" >> sitemap.xml
         echo "已加入新聞頁面"
         
+        # 計算365天前的日期
+        cutoff_date=$(date -d "365 days ago" +%s)
+        echo "限制日期：$(date -d @$cutoff_date +%Y-%m-%d)（365天前）"
+        
         # 收集所有日期資料夾 (新結構: YYYY/MM/DD/)
         folders=()
+        article_count=0
+        
         for year_dir in 20*/; do
           if [[ -d "$year_dir" && ${year_dir%/} =~ ^20[0-9]{2}$ ]]; then
             for month_dir in "${year_dir}"*/; do
@@ -80,13 +86,27 @@ jobs:
                   if [[ -d "$day_dir" && $(basename "$day_dir") =~ ^(0[1-9]|[12][0-9]|3[01])$ ]] && [ -f "${day_dir}index.html" ]; then
                     # 移除末尾的斜線並加入陣列
                     folder_path="${day_dir%/}"
-                    folders+=("$folder_path")
+                    
+                    # 從路徑解析日期並檢查是否在365天內
+                    year=$(echo "$folder_path" | cut -d'/' -f1)
+                    month=$(echo "$folder_path" | cut -d'/' -f2)
+                    day=$(echo "$folder_path" | cut -d'/' -f3)
+                    
+                    # 檢查日期是否在365天內
+                    folder_date=$(date -d "${year}-${month}-${day}" +%s 2>/dev/null || continue)
+                    
+                    if [ $folder_date -ge $cutoff_date ]; then
+                      folders+=("$folder_path")
+                      article_count=$((article_count + 1))
+                    fi
                   fi
                 done
               fi
             done
           fi
         done
+        
+        echo "找到 $article_count 篇365天內的文章"
         
         # 按日期排序（最新的在前）- 根據路徑排序
         IFS=$'\n' sorted_folders=($(printf '%s\n' "${folders[@]}" | sort -r))
@@ -109,7 +129,7 @@ jobs:
             current_date=$(date +%s)
             days_diff=$(( (current_date - folder_date) / 86400 ))
             
-            # 根據資料新舊設定參數
+            # 根據資料新舊設定參數（針對股票分析優化）
             if [ $days_diff -le 1 ]; then
               priority="1.0"
               changefreq="hourly"
@@ -117,11 +137,17 @@ jobs:
               priority="0.9"
               changefreq="daily"
             elif [ $days_diff -le 30 ]; then
-              priority="0.7"
+              priority="0.8"
               changefreq="weekly"
-            else
-              priority="0.5"
+            elif [ $days_diff -le 90 ]; then
+              priority="0.6"
               changefreq="monthly"
+            elif [ $days_diff -le 180 ]; then
+              priority="0.4"
+              changefreq="monthly"
+            else
+              priority="0.3"
+              changefreq="yearly"
             fi
             
             echo "  <url>" >> sitemap.xml
@@ -132,12 +158,15 @@ jobs:
             echo "  </url>" >> sitemap.xml
             
             count=$((count + 1))
-            echo "已處理: $folder ($days_diff 天前)"
+            echo "已處理: $folder ($days_diff 天前，優先級: $priority)"
           fi
         done
         
         echo '</urlset>' >> sitemap.xml
-        echo "Sitemap 生成完成，包含 $count 個頁面"
+        echo "Sitemap 生成完成！"
+        echo "- 靜態頁面: 4 個（首頁、RSS、搜尋、新聞）"
+        echo "- 文章頁面: $count 個（365天內）"
+        echo "- 總計頁面: $((count + 4)) 個"
         
     - name: Force commit sitemap
       run: |
@@ -163,7 +192,7 @@ jobs:
         fi
         
         # 無論如何都嘗試提交
-        git commit -m "🤖 自動更新 sitemap - $(date +'%Y-%m-%d %H:%M:%S')" || echo "提交失敗或沒有變更"
+        git commit -m "🤖 自動更新 sitemap (365天內文章) - $(date +'%Y-%m-%d %H:%M:%S')" || echo "提交失敗或沒有變更"
         
         echo "=== 推送變更 ==="
         git push origin main || echo "推送失敗"
@@ -180,8 +209,9 @@ jobs:
         echo "=== Sitemap 資訊 ==="
         echo "檔案大小: $(wc -c < sitemap.xml) bytes"
         echo "包含頁面數: $(grep -c '<loc>' sitemap.xml)"
-        echo "最近5筆資料:"
-        grep '<loc>' sitemap.xml | head -5 | sed 's/.*<loc>\(.*\)<\/loc>.*/  \1/'
+        echo ""
+        echo "最近10篇文章:"
+        grep '<loc>' sitemap.xml | grep -E '/20[0-9]{2}/[0-9]{2}/[0-9]{2}/' | head -10 | sed 's/.*<loc>\(.*\)<\/loc>.*/  \1/'
         echo ""
         echo "Sitemap 位置: https://stock.may.tw/sitemap.xml"
-        
+        echo "🎉 Sitemap 更新完成！僅包含365天內的文章，保持檔案精簡高效"

@@ -5,8 +5,10 @@ on:
   push:
     branches: [ main ]
     paths:
-      - '20*/[0-9][0-9]/[0-9][0-9]/**'  # 監控新的資料夾結構 2025/09/05/
-  workflow_dispatch:  # 允許手動觸發
+      - '20*/[0-9][0-9]/[0-9][0-9]/**'        # 日報
+      - '20*/weekly/[0-9][0-9]/**'            # 週報
+      - '20*/monthly/[0-9][0-9]/**'           # 月報
+  workflow_dispatch:
 
 jobs:
   generate-rss:
@@ -17,20 +19,20 @@ jobs:
       if: github.event_name == 'push'
       run: |
         echo "等待其他 workflow 完成..."
-        sleep 60  # 等待 60 秒讓其他 workflow 先執行
+        sleep 60
     
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # 獲取完整歷史以便排序
-        ref: main  # 確保拉取最新的 main 分支
+        fetch-depth: 0
+        ref: main
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
 
-    - name: Generate RSS Feed
+    - name: Generate Unified RSS Feed
       run: |
         cat > generate-rss.js << 'EOF'
         const fs = require('fs');
@@ -40,9 +42,9 @@ jobs:
         const rssHeader = `<?xml version="1.0" encoding="UTF-8"?>
         <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
           <channel>
-            <title>台股盤後 - 法人買賣超整理</title>
+            <title>台股分析 - 完整動態</title>
             <link>https://stock.may.tw</link>
-            <description>利用AI彙整台股盤後資訊，快速掃描法人當日籌碼。</description>
+            <description>包含日報、週報、月報的完整台股分析內容。利用AI彙整台股資訊，快速掌握市場動向。</description>
             <language>zh-TW</language>
             <atom:link href="https://stock.may.tw/rss.xml" rel="self" type="application/rss+xml"/>
             <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>`;
@@ -50,85 +52,125 @@ jobs:
         const rssFooter = `  </channel>
         </rss>`;
 
-        // 獲取所有日期資料夾
-        const getAllDateFolders = () => {
-          const folders = [];
+        // 獲取所有文章
+        const getAllArticles = () => {
+          const articles = [];
           
-          // 掃描年份資料夾 (2024, 2025, etc.)
           const yearFolders = fs.readdirSync('.')
-            .filter(item => {
-              const stat = fs.statSync(item);
-              return stat.isDirectory() && /^20\d{2}$/.test(item); // 匹配 20XX 年份
-            });
+            .filter(item => fs.statSync(item).isDirectory() && /^20\d{2}$/.test(item));
           
           yearFolders.forEach(year => {
             const yearPath = `./${year}`;
-            if (fs.existsSync(yearPath)) {
-              // 掃描月份資料夾 (01, 02, ..., 12)
-              const monthFolders = fs.readdirSync(yearPath)
+            
+            // === 掃描日報 ===
+            const monthFolders = fs.readdirSync(yearPath)
+              .filter(item => {
+                const itemPath = path.join(yearPath, item);
+                return fs.statSync(itemPath).isDirectory() && /^(0[1-9]|1[0-2])$/.test(item);
+              });
+            
+            monthFolders.forEach(month => {
+              const monthPath = path.join(yearPath, month);
+              if (fs.existsSync(monthPath)) {
+                const dayFolders = fs.readdirSync(monthPath)
+                  .filter(item => {
+                    const itemPath = path.join(monthPath, item);
+                    return fs.statSync(itemPath).isDirectory() && /^(0[1-9]|[12]\d|3[01])$/.test(item);
+                  });
+                
+                dayFolders.forEach(day => {
+                  const indexPath = path.join(monthPath, day, 'index.html');
+                  if (fs.existsSync(indexPath)) {
+                    const date = new Date(year, month - 1, day, 16, 30, 0); // 下午4:30
+                    articles.push({
+                      path: `${year}/${month}/${day}`,
+                      title: `${year}年${month}月${day}日 法人買賣超整理`,
+                      description: `本文整理了${year}年${month}月${day}日台股盤後三大法人的交易動向。`,
+                      date: date,
+                      sortKey: date.getTime(),
+                      type: 'daily'
+                    });
+                  }
+                });
+              }
+            });
+            
+            // === 掃描週報 ===
+            const weeklyPath = path.join(yearPath, 'weekly');
+            if (fs.existsSync(weeklyPath)) {
+              const weekFolders = fs.readdirSync(weeklyPath)
                 .filter(item => {
-                  const stat = fs.statSync(path.join(yearPath, item));
-                  return stat.isDirectory() && /^(0[1-9]|1[0-2])$/.test(item); // 匹配 01-12
+                  const itemPath = path.join(weeklyPath, item);
+                  return fs.statSync(itemPath).isDirectory() && /^[0-5]\d$/.test(item);
+                });
+              
+              weekFolders.forEach(week => {
+                const indexPath = path.join(weeklyPath, week, 'index.html');
+                if (fs.existsSync(indexPath)) {
+                  // 計算該週的大致日期 (週日晚上8點)
+                  const weekNum = parseInt(week);
+                  const jan1 = new Date(year, 0, 1);
+                  const firstSunday = new Date(jan1);
+                  firstSunday.setDate(jan1.getDate() + (7 - jan1.getDay()) % 7);
+                  const weekDate = new Date(firstSunday);
+                  weekDate.setDate(firstSunday.getDate() + (weekNum - 1) * 7);
+                  weekDate.setHours(20, 0, 0); // 週日晚上8點
+                  
+                  articles.push({
+                    path: `${year}/weekly/${week}`,
+                    title: `${year}年第${week}週 法人買賣超整理週報`,
+                    description: `本文整理了${year}年第${week}週三大法人的交易動向。`,
+                    date: weekDate,
+                    sortKey: weekDate.getTime(),
+                    type: 'weekly'
+                  });
+                }
+              });
+            }
+            
+            // === 掃描月報 ===
+            const monthlyPath = path.join(yearPath, 'monthly');
+            if (fs.existsSync(monthlyPath)) {
+              const monthFolders = fs.readdirSync(monthlyPath)
+                .filter(item => {
+                  const itemPath = path.join(monthlyPath, item);
+                  return fs.statSync(itemPath).isDirectory() && /^(0[1-9]|1[0-2])$/.test(item);
                 });
               
               monthFolders.forEach(month => {
-                const monthPath = path.join(yearPath, month);
-                if (fs.existsSync(monthPath)) {
-                  // 掃描日期資料夾 (01, 02, ..., 31)
-                  const dayFolders = fs.readdirSync(monthPath)
-                    .filter(item => {
-                      const stat = fs.statSync(path.join(monthPath, item));
-                      return stat.isDirectory() && /^(0[1-9]|[12]\d|3[01])$/.test(item); // 匹配 01-31
-                    });
+                const indexPath = path.join(monthlyPath, month, 'index.html');
+                if (fs.existsSync(indexPath)) {
+                  // 月報設為該月最後一天晚上9點
+                  const date = new Date(year, month, 0, 21, 0, 0); // 月底晚上9點
                   
-                  dayFolders.forEach(day => {
-                    const fullPath = `${year}/${month}/${day}`;
-                    const indexPath = path.join(monthPath, day, 'index.html');
-                    
-                    // 確認該路徑有 index.html
-                    if (fs.existsSync(indexPath)) {
-                      folders.push({
-                        path: fullPath,
-                        dateStr: `${year}${month}${day}`, // 用於排序的日期字串
-                        year: year,
-                        month: month,
-                        day: day
-                      });
-                    }
+                  articles.push({
+                    path: `${year}/monthly/${month}`,
+                    title: `${year}年${month}月 法人買賣超整理月報`,
+                    description: `本文整理了${year}年${month}月三大法人的交易動向。`,
+                    date: date,
+                    sortKey: date.getTime(),
+                    type: 'monthly'
                   });
                 }
               });
             }
           });
           
-          // 按日期降序排列（最新的在前）
-          return folders.sort((a, b) => b.dateStr.localeCompare(a.dateStr));
-        };
-
-        // 格式化日期顯示
-        const formatDate = (folderInfo) => {
-          return `${folderInfo.year}年${folderInfo.month}月${folderInfo.day}日`;
-        };
-
-        // 轉換為 RSS 日期格式
-        const toRSSDate = (folderInfo) => {
-          const date = new Date(folderInfo.year, folderInfo.month - 1, folderInfo.day, 16, 30, 0); // 下午4點半
-          return date.toUTCString();
+          // 按時間降序排列（最新的在前）
+          return articles.sort((a, b) => b.sortKey - a.sortKey);
         };
 
         // 生成 RSS 項目
-        const generateRSSItems = (folders) => {
-          return folders.slice(0, 10).map(folderInfo => { // 只取最新 10 筆
-            const title = `${formatDate(folderInfo)} 法人買賣超整理`;
-            const link = `https://stock.may.tw/${folderInfo.path}/`;
-            const pubDate = toRSSDate(folderInfo);
-            const guid = `https://stock.may.tw/${folderInfo.path}/`;
+        const generateRSSItems = (articles) => {
+          return articles.slice(0, 20).map(article => { // 取最新 20 篇
+            const link = `https://stock.may.tw/${article.path}/`;
+            const guid = `https://stock.may.tw/${article.path}/`;
             
             return `    <item>
-              <title>${title}</title>
+              <title>${article.title}</title>
               <link>${link}</link>
-              <description>本文整理了${formatDate(folderInfo)}台股盤後三大法人的交易動向。</description>
-              <pubDate>${pubDate}</pubDate>
+              <description>${article.description}</description>
+              <pubDate>${article.date.toUTCString()}</pubDate>
               <guid isPermaLink="true">${guid}</guid>
             </item>`;
           }).join('\n');
@@ -137,26 +179,34 @@ jobs:
         // 主程序
         const main = () => {
           try {
-            const folders = getAllDateFolders();
-            console.log(`找到 ${folders.length} 個日期資料夾`);
+            const articles = getAllArticles();
+            console.log(`找到總共 ${articles.length} 篇文章`);
             
-            if (folders.length === 0) {
-              console.log('沒有找到任何日期資料夾');
+            // 顯示各類型文章數量
+            const dailyCount = articles.filter(a => a.type === 'daily').length;
+            const weeklyCount = articles.filter(a => a.type === 'weekly').length;
+            const monthlyCount = articles.filter(a => a.type === 'monthly').length;
+            
+            console.log(`日報: ${dailyCount} 篇`);
+            console.log(`週報: ${weeklyCount} 篇`);
+            console.log(`月報: ${monthlyCount} 篇`);
+            
+            if (articles.length === 0) {
+              console.log('沒有找到任何文章');
               return;
             }
             
-            // 顯示找到的資料夾（用於除錯）
-            console.log('最新的幾個資料夾:');
-            folders.slice(0, 5).forEach(folder => {
-              console.log(`  ${folder.path} (${folder.dateStr})`);
+            // 顯示最新的幾篇文章
+            console.log('\n最新的文章:');
+            articles.slice(0, 5).forEach((article, index) => {
+              console.log(`  ${index + 1}. [${article.type}] ${article.title}`);
             });
 
-            const rssItems = generateRSSItems(folders);
+            const rssItems = generateRSSItems(articles);
             const rssContent = `${rssHeader}\n${rssItems}\n${rssFooter}`;
             
             fs.writeFileSync('rss.xml', rssContent, 'utf8');
-            console.log('RSS feed 生成完成');
-            console.log(`包含 ${Math.min(folders.length, 10)} 個項目`);
+            console.log(`\nRSS feed 生成完成，包含最新 ${Math.min(articles.length, 20)} 篇文章`);
           } catch (error) {
             console.error('生成 RSS 時發生錯誤:', error);
             process.exit(1);
@@ -179,10 +229,9 @@ jobs:
           exit 0
         fi
         
-        # 提交變更
         git commit -m "🤖 Auto-update RSS feed"
         
-        # 推送時加入重試機制
+        # 推送重試機制
         max_attempts=3
         attempt=1
         
@@ -196,12 +245,11 @@ jobs:
             echo "❌ 推送失敗，準備重試..."
             
             if [ $attempt -eq $max_attempts ]; then
-              echo "❌ 已達最大重試次數 ($max_attempts)，放棄推送"
+              echo "❌ 已達最大重試次數，放棄推送"
               exit 1
             fi
             
             echo "🔄 拉取遠端變更並重新嘗試..."
-            # 先拉取最新變更
             if git pull --rebase origin main; then
               echo "✅ 成功同步遠端變更"
             else
@@ -213,8 +261,7 @@ jobs:
               git commit -m "🤖 Auto-update RSS feed"
             fi
             
-            # 等待隨機時間避免衝突
-            sleep_time=$((5 + RANDOM % 5))  # 5-9秒隨機等待
+            sleep_time=$((5 + RANDOM % 5))
             echo "⏳ 等待 $sleep_time 秒後重試..."
             sleep $sleep_time
           fi

@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>台股分析 - 完整動態</title>
+    <title>台股盤後 - 法人買賣超整理</title>
     <link>https://stock.may.tw</link>
-    <description>包含日報、週報、月報的完整台股分析內容。利用AI彙整台股資訊，快速掌握市場動向。</description>
+    <description>利用AI彙整台股盤後資訊，快速掌握市場動向。</description>
     <language>zh-TW</language>
     <atom:link href="https://stock.may.tw/rss.xml" rel="self" type="application/rss+xml"/>
-    <lastBuildDate>Fri, 19 Sep 2025 15:13:41 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 19 Sep 2025 16:09:49 GMT</lastBuildDate>
     <item>
       <title>2025年第38週 法人買賣超整理週報</title>
       <link>https://stock.may.tw/2025/weekly/38/</link>

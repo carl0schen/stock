@@ -67,38 +67,51 @@
 <body>
     <div class="search-container">
         <h2>輸入日期前往文章</h2>
-        <p class="info-text">目前資料從2025年9月5日開始。</p>
+        <p class="info-text">輸入規則：<br>
+           日報：20250912<br>
+           週報：2025W38<br>
+           月報：2025M09
+        </p>
         <input type="text" id="dateInput" placeholder="例如：20250912" class="date-input">
-        <button onclick="goToDatePage()" class="date-button">前往</button>
+        <button onclick="goToPage()" class="date-button">前往</button>
     </div>
 
     <script>
-    // 新增日期格式化函式
-    function formatDatePath(dateString) {
-      // 假設輸入格式為 YYYYMMDD
-      const year = dateString.substring(0, 4);
-      const month = dateString.substring(4, 6);
-      const day = dateString.substring(6, 8);
+    function goToPage() {
+      const input = document.getElementById('dateInput').value.trim().toUpperCase();
+      let redirectPath = '';
       
-      // 回傳 YYYY/MM/DD/ 格式
-      return `/${year}/${month}/${day}/`;
-    }
-
-    function goToDatePage() {
-      const date = document.getElementById('dateInput').value;
-      if (date && /^\d{8}$/.test(date)) {
-        // 呼叫新的函式來轉換路徑
-        const newPath = formatDatePath(date);
-        window.location.href = newPath;
-      } else {
-        alert('請輸入有效的日期格式 (YYYYMMDD)，例如：20250912');
+      // 判斷是否為「日報」格式 (YYYYMMDD)
+      if (/^\d{8}$/.test(input)) {
+        const year = input.substring(0, 4);
+        const month = input.substring(4, 6);
+        const day = input.substring(6, 8);
+        redirectPath = `/${year}/${month}/${day}/`;
+      } 
+      // 判斷是否為「週報」格式 (YYYYW[W])
+      else if (/^\d{4}W\d{1,2}$/.test(input)) {
+        const year = input.substring(0, 4);
+        const week = input.substring(input.indexOf('W') + 1);
+        redirectPath = `/${year}/weekly/${week}/`;
+      } 
+      // 判斷是否為「月報」格式 (YYYYM[M])
+      else if (/^\d{4}M\d{1,2}$/.test(input)) {
+        const year = input.substring(0, 4);
+        const month = input.substring(input.indexOf('M') + 1);
+        redirectPath = `/${year}/monthly/${month}/`;
+      } 
+      else {
+        alert('請輸入有效的日期格式！');
+        return;
       }
+      
+      window.location.href = redirectPath;
     }
 
     const dateInput = document.getElementById('dateInput');
     dateInput.addEventListener('keypress', function(event) {
       if (event.key === 'Enter') {
-        goToDatePage();
+        goToPage();
       }
     });
     </script>

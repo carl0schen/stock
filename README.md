@@ -25,12 +25,15 @@
 
 ### 資料網址
 
-- 一日  
+- 日報  
 網址格式為`https://stock.may.tw/西元年/月/日/`，例如：`https://stock.may.tw/2025/09/12/`。資料從2025年9月5日開始。
-- 五日  
+
+- 週報  
 網址格式為`https://stock.may.tw/西元年/weekly/週數/`，例如：`https://stock.may.tw/2025/weekly/38/`。資料從2025年第38週開始。
-- 三十日  
+
+- 月報  
 網址格式為`https://stock.may.tw/西元年/monthly/月/`，例如：`https://stock.may.tw/2025/monthly/09/`。暫無資料。
+
 - 搜尋文章  
 或是到[搜尋頁面](https://stock.may.tw/search/)輸入日期前往文章。
 

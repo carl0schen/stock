@@ -31,7 +31,7 @@
 網址格式為`https://stock.may.tw/西元年/monthly/月/`，例如：`https://stock.may.tw/2025/monthly/09/`。暫無資料。
 
 - 搜尋文章  
-或是到[搜尋頁面](https://stock.may.tw/search/)輸入日期前往文章。
+到[搜尋頁面](https://stock.may.tw/search/)輸入日期前往文章，或是到[GitHub](https://github.com/carl0schen/stock)的日期資料夾直接檢視文章。
 
 ### 聯絡信箱
 

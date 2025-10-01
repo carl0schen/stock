@@ -15,9 +15,9 @@
 三大法人買賣金額統計表：臺灣證券交易所。
 
 - 月報  
-上市投信買賣超：暫無。  
-上市外資買賣超：暫無。  
-三大法人買賣金額統計表：暫無。
+上市投信買賣超：臺灣證券交易所。  
+上市外資買賣超：臺灣證券交易所。  
+三大法人買賣金額統計表：臺灣證券交易所。
 
 ### 資料網址
 
@@ -28,7 +28,7 @@
 網址格式為`https://stock.may.tw/西元年/weekly/週數/`，例如：`https://stock.may.tw/2025/weekly/38/`。資料從2025年第38週開始。
 
 - 月報  
-網址格式為`https://stock.may.tw/西元年/monthly/月/`，例如：`https://stock.may.tw/2025/monthly/09/`。暫無資料。
+網址格式為`https://stock.may.tw/西元年/monthly/月/`，例如：`https://stock.may.tw/2025/monthly/09/`。資料從2025年9月開始。
 
 - 搜尋文章  
 到[搜尋頁面](https://stock.may.tw/search/)輸入日期前往文章，或是到[GitHub](https://github.com/carl0schen/stock)的日期資料夾直接檢視文章。

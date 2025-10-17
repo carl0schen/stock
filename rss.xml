@@ -6,7 +6,14 @@
     <description>利用AI彙整台股盤後資訊，快速掌握市場動向。</description>
     <language>zh-TW</language>
     <atom:link href="https://stock.may.tw/rss.xml" rel="self" type="application/rss+xml"/>
-    <lastBuildDate>Thu, 16 Oct 2025 08:55:57 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 17 Oct 2025 08:33:49 GMT</lastBuildDate>
+    <item>
+      <title>2025年10月17日 法人買賣超整理</title>
+      <link>https://stock.may.tw/2025/10/17/</link>
+      <description>本文整理了2025年10月17日台股盤後三大法人的交易動向。</description>
+      <pubDate>Fri, 17 Oct 2025 16:30:00 GMT</pubDate>
+      <guid isPermaLink="true">https://stock.may.tw/2025/10/17/</guid>
+    </item>
     <item>
       <title>2025年10月16日 法人買賣超整理</title>
       <link>https://stock.may.tw/2025/10/16/</link>
@@ -139,13 +146,6 @@
       <description>本文整理了2025年09月23日台股盤後三大法人的交易動向。</description>
       <pubDate>Tue, 23 Sep 2025 16:30:00 GMT</pubDate>
       <guid isPermaLink="true">https://stock.may.tw/2025/09/23/</guid>
-    </item>
-    <item>
-      <title>2025年09月22日 法人買賣超整理</title>
-      <link>https://stock.may.tw/2025/09/22/</link>
-      <description>本文整理了2025年09月22日台股盤後三大法人的交易動向。</description>
-      <pubDate>Mon, 22 Sep 2025 16:30:00 GMT</pubDate>
-      <guid isPermaLink="true">https://stock.may.tw/2025/09/22/</guid>
     </item>
   </channel>
 </rss>

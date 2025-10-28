@@ -10,10 +10,6 @@ on:
       - '20*/monthly/*/index.html'  # 月報
       - '20*/**'
   
-  # 每天早上自動執行一次
-  schedule:
-    - cron: '0 1 * * *'  # UTC 1:00 AM (台灣時間 9:00 AM)
-  
   # 允許手動觸發
   workflow_dispatch:
 

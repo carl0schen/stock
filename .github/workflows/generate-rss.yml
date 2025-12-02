@@ -82,10 +82,13 @@ jobs:
                   const indexPath = path.join(monthPath, day, 'index.html');
                   if (fs.existsSync(indexPath)) {
                     const date = new Date(year, month - 1, day, 16, 30, 0); // 下午4:30
+                    // 去掉前導0的顯示格式
+                    const displayMonth = parseInt(month);
+                    const displayDay = parseInt(day);
                     articles.push({
                       path: `${year}/${month}/${day}`,
-                      title: `${year}年${month}月${day}日 法人買賣超整理`,
-                      description: `本文整理了${year}年${month}月${day}日台股盤後三大法人的交易動向。`,
+                      title: `${year}年${displayMonth}月${displayDay}日 法人買賣超整理`,
+                      description: `本文整理了${year}年${displayMonth}月${displayDay}日台股盤後三大法人的交易動向。`,
                       date: date,
                       sortKey: date.getTime(),
                       type: 'daily'
@@ -268,3 +271,4 @@ jobs:
           
           attempt=$((attempt + 1))
         done
+        

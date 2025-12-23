@@ -67,6 +67,15 @@ jobs:
         echo "    <priority>0.7</priority>" >> sitemap.xml
         echo "  </url>" >> sitemap.xml
         echo "已加入新聞頁面"
+
+        # 加入聯絡頁面
+        echo "  <url>" >> sitemap.xml
+        echo "    <loc>https://stock.may.tw/contact/</loc>" >> sitemap.xml
+        echo "    <lastmod>$(date +%Y-%m-%d)</lastmod>" >> sitemap.xml
+        echo "    <changefreq>yearly</changefreq>" >> sitemap.xml
+        echo "    <priority>0.5</priority>" >> sitemap.xml
+        echo "  </url>" >> sitemap.xml
+        echo "已加入聯絡頁面"
         
         # 收集並加入週報（不受365天限制）
         weekly_count=0
@@ -222,11 +231,11 @@ jobs:
         
         echo '</urlset>' >> sitemap.xml
         echo "Sitemap 生成完成！"
-        echo "- 靜態頁面: 4 個（首頁、RSS、搜尋、新聞）"
+        echo "- 靜態頁面: 5 個（首頁、RSS、搜尋、新聞、聯絡）"
         echo "- 週報頁面: $weekly_count 個（不受365天限制）"
         echo "- 月報頁面: $monthly_count 個（不受365天限制）"
         echo "- 日報頁面: $count 個（365天內）"
-        echo "- 總計頁面: $((count + weekly_count + monthly_count + 4)) 個"
+        echo "- 總計頁面: $((count + weekly_count + monthly_count + 5)) 個"
         
     - name: Force commit sitemap
       run: |

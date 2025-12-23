@@ -5,7 +5,7 @@
     <meta content="width=device-width, initial-scale=1, maximum-scale=1" name="viewport">
     <title>聯絡表單 - 法人買賣超整理</title>
     <style>
-        /* CSS 樣式維持不變 */
+        /* 樣式保持不變 */
         body { margin: 0; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: Arial, sans-serif; background-color: #f5f5f5; color: #333; box-sizing: border-box; }
         .form-container { text-align: center; padding: 30px; background-color: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); width: 100%; max-width: 400px; }
         .form-container h2 { font-size: 24px; font-weight: bold; margin-top: 0; margin-bottom: 20px; }
@@ -16,11 +16,11 @@
         .form-input, .form-textarea { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; transition: border-color 0.3s, background-color 0.3s; font-family: Arial, sans-serif; }
         .form-input:focus, .form-textarea:focus { border-color: #007bff; outline: none; background-color: #fff; }
         .form-textarea { height: 100px; resize: vertical; }
+        /* 驗證錯誤樣式 */
         .form-input:not(:placeholder-shown):invalid, .form-textarea:not(:placeholder-shown):invalid { border-color: #d9534f; background-color: #fff8f8; }
         .form-input:invalid:focus, .form-textarea:invalid:focus { border-color: #d9534f; }
         .submit-button { width: 100%; padding: 12px; font-size: 16px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s; margin-top: 10px; }
         .submit-button:hover { background-color: #0056b3; }
-        .submit-button:disabled { background-color: #ccc; cursor: not-allowed; }
     </style>
 </head>
 <body>
@@ -29,17 +29,15 @@
         <h2>聯絡我們</h2>
         <p class="info-text">如果資料有誤，歡迎透過下方表單聯繫。</p>
         
-        <iframe name="hidden_frame" id="hidden_frame" style="display:none;"></iframe>
-
-        <form id="contactForm" 
-              action="https://formsubmit.co/el/ruvelo" 
-              method="POST" 
-              target="hidden_frame">
+        <form action="https://formsubmit.co/el/ruvelo" method="POST">
             
             <input type="hidden" name="_subject" value="來自 stock.may.tw 的新聯絡訊息">
             <input type="hidden" name="_captcha" value="false">
             <input type="hidden" name="_template" value="table">
-            
+            <input type="text" name="_honey" style="display:none">
+
+            <input type="hidden" name="_next" value="https://stock.may.tw/thanks.html">
+
             <div class="form-group">
                 <label for="name" class="form-label">名稱 <span class="required-mark">*</span></label>
                 <input type="text" id="name" name="name" class="form-input" placeholder="您的名稱" required>
@@ -55,28 +53,9 @@
                 <textarea id="message" name="message" class="form-textarea" placeholder="請輸入您的訊息..." required></textarea>
             </div>
 
-            <button type="submit" id="submitBtn" class="submit-button">送出訊息</button>
+            <button type="submit" class="submit-button">送出訊息</button>
         </form>
     </div>
-
-    <script>
-        var formSubmitted = false;
-
-        document.getElementById("contactForm").addEventListener("submit", function() {
-            var btn = document.getElementById("submitBtn");
-            btn.disabled = true;
-            btn.innerText = "傳送中...";
-            formSubmitted = true;
-        });
-
-        // 當 iframe 載入完成 (代表 FormSubmit 處理完了)
-        document.getElementById("hidden_frame").onload = function() {
-            if (formSubmitted) {
-                // 跳轉到感謝頁
-                window.location.href = "https://stock.may.tw/contact/thanks.html";
-            }
-        };
-    </script>
 
 </body>
 </html>

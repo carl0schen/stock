@@ -33,9 +33,9 @@
 - 搜尋文章  
 到[搜尋頁面](https://stock.may.tw/search/)輸入日期前往文章，或是到[GitHub](https://github.com/carl0schen/stock)的日期資料夾直接檢視文章。
 
-### 聯絡信箱
+### 聯絡我們
 
-如果資料有誤，歡迎來信告知：`stock.may.tw@ghost.tw`  
+如果資料有誤，歡迎來信告知：<http://stock.may.tw/contact/>
 
 ### 文章訂閱
 

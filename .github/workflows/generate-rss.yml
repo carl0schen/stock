@@ -121,8 +121,8 @@ jobs:
                   
                   articles.push({
                     path: `${year}/weekly/${week}`,
-                    title: `${year}年第${week}週 法人買賣超整理週報`,
-                    description: `本文整理了${year}年第${week}週三大法人的交易動向。`,
+                    title: `${year}年第${weekNum}週 法人買賣超整理週報`,
+                    description: `本文整理了${year}年第${weekNum}週三大法人的交易動向。`,
                     date: weekDate,
                     sortKey: weekDate.getTime(),
                     type: 'weekly'
